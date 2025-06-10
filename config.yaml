@@ -1,0 +1,85 @@
+# 修复后的config.yaml
+
+log:
+    level: "INFO"
+
+dataset:
+    # [数据根目录]
+    data_root: "/mnt/data/home/tycloud/workspace/algorithms_raw/data/PBMC/"
+    # 原始数据目录
+    raw_dir: "/mnt/data/home/tycloud/workspace/algorithms_raw/data/PBMC/raw_600/"
+    # 处理后数据目录
+    processed_dir: "/mnt/data/home/tycloud/workspace/algorithms_raw/data/PBMC/processed/"
+
+    edge_neg: "data_list_hetero"
+
+    # gene_peak matrix
+    orige_file: null  # 这里需要显式设置为null而不是留空
+
+    force_reload: false
+
+    num_graphs: 1
+    use_node_name: true
+    use_graph_labels: false
+
+    # 节点label列名
+    node_label_column: null
+
+    # 边相关配置
+    edge_timestamp_column: null
+    edge_type_column: null
+    edge_label_column: null
+    edge_feature_column: "edge_id_HC, edge_id_T"
+
+
+    merge_graphs: true
+    seed: 42
+    rate: 0.2
+    ncores: 10
+
+    global_network_method: 'pearson'
+    cor_threshold: 0.05
+    CRE_CRE: 0.001
+    threshold_m: 'percent'
+    mask_prior: false
+    reverse: false
+    k_fold: 5
+
+model:
+    hidden_dim: 32
+    embedding_dim: 16
+    Negative_rate: 1
+    num_layers: 4
+    dropout: 0.1
+    edge_loss_rate: 0.5
+    edge_type_weights:
+        CRE-CRE: 0.1
+        TF-CRE: 0.9
+
+attention:
+    heads: 1
+    top_k_type: 'globel'
+    top_k: -1
+    hop_num: 4
+
+training:
+    batch_size: 1
+    shuffle: false
+    epochs: 1
+    learning_rate: 0.001
+    weight_decay: 0
+    idx_limit: 500
+    epoch_limit: 0
+    epoch_cut: 0
+    cor_limit: 0.1
+    auc_limit: 0.6
+    aupr_limit: 0.6
+    auc_TF_CRE_limit: 0.7
+    auc_CRE_CRE_limit: 0.7,
+
+    mean_aupr_limit: 0.3
+    neg_epoch_limit: 3
+
+tf_metrics:
+    interval: 3
+    min_positive_edges: 200
