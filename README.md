@@ -1,6 +1,6 @@
 # SMOGT
 ## Introduction
-SMOGT constructs a heterogeneous graph learning architecture guided by epigenetic mechanisms. It is a novel method for building high-precision gene regulatory networks from single-cell multi-omics data.
+SMOGT（Single-cell Multo-Omics Graph Transformer） constructs a heterogeneous graph learning architecture guided by epigenetic mechanisms. It is a novel method for building high-precision gene regulatory networks from single-cell multi-omics data.
 ## downstream module
 - BioStreamNet: Predict target gene expression
 - RWR_Pert: Identify TF perturbation targets
