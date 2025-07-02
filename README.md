@@ -37,9 +37,12 @@ git clone https://github.com/YuHongHuang-lab/SMOGT
 ```
 ### 3. prepare the configuration file
 Prepare a configuration file similar to the provided config.yaml, including data paths, model parameters, and training settings.
-### 4. Model Training
+### 4.Data preprocessing
+```sh
+Rscript data_prepare.R
+```
+### 5. Model Training
 ```sh
 python main.py
 ```
-### 5. Subsequent Analysis
-We offer multiple follow-up analysis scripts, including gene expression prediction and driver factor identification.
+
