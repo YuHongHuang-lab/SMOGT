@@ -38,6 +38,7 @@ git clone https://github.com/YuHongHuang-lab/SMOGT
 ### 3. prepare the configuration file
 Prepare a configuration file similar to the provided config.yaml, including data paths, model parameters, and training settings.
 ### 4.Data preprocessing
+You can obtain our project's data through this URL: https://zenodo.org/records/15816796
 ```sh
 Rscript data_prepare.R
 ```
