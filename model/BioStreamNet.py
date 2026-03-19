@@ -29,7 +29,7 @@ class ExpressionDataset(Dataset):
             self.cre_indices = []
             self.cre_expr = None
 
-        # 目标基因的索引和表达
+        # Indexing and expression of the target gene
         if 'gene_type' in gene_network and gene_network['gene_type'] == 'TF':
             self.target_idx = gene_network['gene_idx']
             target_column = self.target_idx
@@ -55,7 +55,7 @@ class ExpressionDataset(Dataset):
 
 class GlobalNetworkManager:
     """
-    全局网络对象
+    Global network object
     """
     def __init__(self,
                  TF_TF_network=None,
@@ -142,7 +142,7 @@ class GlobalNetworkManager:
 
     def _build_global_networks(self):
         """
-        全局网络
+        Global network
         """
         n_TFs = len(self.TF_names)
         n_CREs = len(self.CRE_names)
@@ -190,7 +190,7 @@ class GlobalNetworkManager:
 
     def get_gene_specific_network(self, gene_name, gene_type='Target'):
         """
-        获取特定基因的子网络，为所有网络层添加自环和扩展表示
+        Obtain the subnetworks of specific genes and add self-loops and extended representations to all network layers
         """
         if gene_type == 'Target':
             if gene_name not in self.Target_idx_map:
@@ -199,7 +199,7 @@ class GlobalNetworkManager:
 
             Target_idx = self.Target_idx_map[gene_name]
 
-            # 直接CRE
+            # direct CRE
             direct_CREs = torch.where(self.CRE_Target_matrix[:, Target_idx] > 0)[0]
 
             if len(direct_CREs) == 0:
@@ -214,7 +214,7 @@ class GlobalNetworkManager:
             if cre_output_edges_list:
                 sub_network_dfs['CRE-Target'] = pd.DataFrame(cre_output_edges_list)
 
-            # 直接CRE的一阶CRE
+            # First-order CRE of direct CRE
             adjacent_CREs = []
             for cre_idx in direct_CREs:
                 incoming_cres = torch.where(self.CRE_CRE_matrix[:, cre_idx] > 0)[0]
@@ -231,7 +231,7 @@ class GlobalNetworkManager:
 
             all_CREs_tensor = torch.cat([direct_CREs])  if dummy_adjacent else torch.cat([adjacent_CREs, direct_CREs])
 
-            # CRE连接TF
+            # CRE connects to TF
             tfs_from_adj = []
             if not dummy_adjacent:
                 for cre_idx in adjacent_CREs:
@@ -259,7 +259,7 @@ class GlobalNetworkManager:
             tf_cre_edges_list = []
             cre_cre_edges_list = []
 
-            # TF-TF转换矩阵 - 添加对角线自环
+            # Add diagonal self-loops to the TF-TF transformation matrix
             TF_TF_subnetwork = self.TF_TF_matrix[related_TFs][:, related_TFs].clone()
             active_tf_tf_indices = TF_TF_subnetwork.nonzero(as_tuple=False)
             for row, col in active_tf_tf_indices:
@@ -270,7 +270,7 @@ class GlobalNetworkManager:
                 if TF_TF_subnetwork[i, i] == 0:
                     TF_TF_subnetwork[i, i] = 1.0
 
-            # CRE-CRE转换矩阵 (n_adjacent + n_direct) × n_direct
+            # CRE-CRE transformation matrix (n_adjacent + n_direct) × n_direct
             CRE_CRE_subnetwork = torch.zeros((n_all_CREs, n_direct))
             if not dummy_adjacent:
                 CRE_CRE_subnetwork[:n_adjacent, :] = self.CRE_CRE_matrix[adjacent_CREs][:, direct_CREs]
@@ -282,10 +282,10 @@ class GlobalNetworkManager:
                     {'from': all_cre_names[row.item()], 'to': direct_cre_names[col.item()], 'type': 'CRE-CRE'})
             if cre_cre_edges_list:
                 sub_network_dfs['CRE_CRE'] = pd.DataFrame(cre_cre_edges_list)
-            for i in range(n_direct):  # 自环
+            for i in range(n_direct):  # Self-loop
                 CRE_CRE_subnetwork[n_adjacent + i, i] = 1.0
 
-            # 构建扩展的TF-CRE转换矩阵 (n_TFs + n_all_CREs) × n_all_CREs
+            # Build an extended TF-CRE transformation matrix(n_TFs + n_all_CREs) × n_all_CREs
             TF_CRE_extended = torch.zeros((n_TFs + n_all_CREs, n_all_CREs))
             if n_TFs > 0:
                 TF_CRE_extended[:n_TFs, :] = self.TF_CRE_matrix[related_TFs][:, all_CREs_tensor]
@@ -299,13 +299,13 @@ class GlobalNetworkManager:
             for i in range(n_all_CREs):  # 自环
                 TF_CRE_extended[n_TFs + i, i] = 1.0
 
-            # CRE-Target连接矩阵 (n_direct × 1)
+            # Cre-target connection matrix (n_direct × 1)
             CRE_Target_subnetwork = self.CRE_Target_matrix[direct_CREs, Target_idx].view(-1, 1)
 
             cre_types = torch.zeros(n_all_CREs)
             cre_types[n_adjacent:] = 1
 
-            # 返回字典
+            # Return to the dictionary
             gene_network = {
                 'gene_name': gene_name,
                 'gene_idx': Target_idx,
@@ -338,7 +338,7 @@ class GlobalNetworkManager:
 
             TF_idx = self.TF_idx_map[gene_name]
 
-            # 直接CRE
+            # Direct CRE
             direct_CREs = torch.where(self.CRE_TF_matrix[:, TF_idx] > 0)[0]
 
             if len(direct_CREs) == 0:
@@ -353,7 +353,7 @@ class GlobalNetworkManager:
             if cre_output_edges_list:
                 sub_network_dfs['CRE-TF'] = pd.DataFrame(cre_output_edges_list)
 
-            # 直接CRE的一阶CRE
+            # First-order CRE of direct CRE
             adjacent_CREs = []
             for cre_idx in direct_CREs:
                 incoming_cres = torch.where(self.CRE_CRE_matrix[:, cre_idx] > 0)[0]
@@ -370,7 +370,7 @@ class GlobalNetworkManager:
 
             all_CREs_tensor = torch.cat([direct_CREs])  if dummy_adjacent else torch.cat([adjacent_CREs, direct_CREs])
 
-            # CRE连接TF
+            # CRE connects to TF
             tfs_from_adj = []
             if not dummy_adjacent:
                 for cre_idx in adjacent_CREs:
@@ -398,7 +398,7 @@ class GlobalNetworkManager:
             tf_cre_edges_list = []
             cre_cre_edges_list = []
 
-            # TF-TF转换矩阵 - 添加对角线自环
+            # Add diagonal self-loops to the TF-TF transformation matrix
             TF_TF_subnetwork = self.TF_TF_matrix[related_TFs][:, related_TFs].clone()
             active_tf_tf_indices = TF_TF_subnetwork.nonzero(as_tuple=False)
             for row, col in active_tf_tf_indices:
@@ -409,7 +409,7 @@ class GlobalNetworkManager:
                 if TF_TF_subnetwork[i, i] == 0:
                     TF_TF_subnetwork[i, i] = 1.0
 
-            # CRE-CRE转换矩阵 (n_adjacent + n_direct) × n_direct
+            # CRE-CRE transformation matrix (n_adjacent + n_direct) × n_direct
             CRE_CRE_subnetwork = torch.zeros((n_all_CREs, n_direct))
             if not dummy_adjacent:
                 CRE_CRE_subnetwork[:n_adjacent, :] = self.CRE_CRE_matrix[adjacent_CREs][:, direct_CREs]
@@ -421,10 +421,10 @@ class GlobalNetworkManager:
                     {'from': all_cre_names[row.item()], 'to': direct_cre_names[col.item()], 'type': 'CRE-CRE'})
             if cre_cre_edges_list:
                 sub_network_dfs['CRE_CRE'] = pd.DataFrame(cre_cre_edges_list)
-            for i in range(n_direct):  # 对角线设置为1（自环）
+            for i in range(n_direct):  # Set the diagonal to 1 (self-loop)
                 CRE_CRE_subnetwork[n_adjacent + i, i] = 1.0
 
-            # 构建扩展的TF-CRE转换矩阵 (n_TFs + n_all_CREs) × n_all_CREs
+            # Build an extended TF-CRE transformation matrix (n_TFs + n_all_CREs) × n_all_CREs
             TF_CRE_extended = torch.zeros((n_TFs + n_all_CREs, n_all_CREs))
             if n_TFs > 0:
                 TF_CRE_extended[:n_TFs, :] = self.TF_CRE_matrix[related_TFs][:, all_CREs_tensor]
@@ -438,10 +438,10 @@ class GlobalNetworkManager:
             for i in range(n_all_CREs):
                 TF_CRE_extended[n_TFs + i, i] = 1.0
 
-            # CRE-Target连接矩阵 (n_direct × 1)
+            # Cr-target connection matrix (n_direct × 1)
             CRE_TF_subnetwork = self.CRE_TF_matrix[direct_CREs, TF_idx].view(-1, 1)
 
-            # 构建全CRE列表和类型标记
+            # Build a full CRE list and type tags
             all_CREs = direct_CREs if dummy_adjacent else torch.cat([adjacent_CREs, direct_CREs])
             cre_types = torch.zeros(n_all_CREs)
             cre_types[n_adjacent:] = 1
@@ -460,14 +460,14 @@ class GlobalNetworkManager:
                 'n_adjacent': n_adjacent,
                 'n_direct': n_direct,
                 'n_all_CREs': n_all_CREs,
-                'TF_TF_network': TF_TF_subnetwork,  # 网络连接
+                'TF_TF_network': TF_TF_subnetwork,  # Network connection
                 'CRE_CRE_network': CRE_CRE_subnetwork,
                 'TF_CRE_network': TF_CRE_extended,
                 'CRE_Target_network': CRE_TF_subnetwork,
-                'TF_TF_mask': (TF_TF_subnetwork > 0).float(),  # 网络掩码
+                'TF_TF_mask': (TF_TF_subnetwork > 0).float(),  # Network mask
                 'CRE_CRE_mask': (CRE_CRE_subnetwork > 0).float(),
                 'TF_CRE_mask': (TF_CRE_extended > 0).float(),
-                'CRE_Target_mask': (CRE_TF_subnetwork > 0).float()  # 复用变量名
+                'CRE_Target_mask': (CRE_TF_subnetwork > 0).float()  # Reuse variable names
             }
 
             return gene_network, sub_network_dfs
@@ -502,7 +502,7 @@ class BioStreamLinear(nn.Module):
         self.weight.register_hook(self.mask_gradient)
 
     def mask_gradient(self, grad):
-        """梯度钩子：确保只更新掩码允许的连接"""
+        """Gradient hook: Ensure that only the connections allowed by the mask are updated"""
         return grad * self.mask
 
     def reset_parameters(self):
@@ -519,7 +519,7 @@ class BioStreamLinear(nn.Module):
 
 class GeneSpecificModel(nn.Module):
     """
-    基因特异性网络模型
+   Gene-specific network model
     """
 
     def __init__(self, gene_network):
@@ -530,28 +530,28 @@ class GeneSpecificModel(nn.Module):
         self.n_all_CREs = gene_network['n_all_CREs']
         self.n_direct = gene_network['n_direct']
 
-        # TF-TF层 (n_TFs × n_TFs)
+        # TF-TF layer (n_TFs × n_TFs)
         self.TF_TF_layer = BioStreamLinear(
             self.n_TFs,
             self.n_TFs,
             gene_network['TF_TF_mask']
         )
 
-        # TF+CRE-CRE层 ((n_TFs + n_all_CREs) × n_all_CREs)
+        # TF+CRE-CRE layer((n_TFs + n_all_CREs) × n_all_CREs)
         self.TF_CRE_layer = BioStreamLinear(
             self.n_TFs + self.n_all_CREs,
             self.n_all_CREs,
             gene_network['TF_CRE_mask']
         )
 
-        # CRE-CRE层 (n_all_CREs × n_direct)
+        # CRE-CRE layer(n_all_CREs × n_direct)
         self.CRE_CRE_layer = BioStreamLinear(
             self.n_all_CREs,
             self.n_direct,
             gene_network['CRE_CRE_mask']
         )
 
-        # CRE-Target(或TF)层 (n_direct × 1)
+        # CRE-Target(or TF) layer(n_direct × 1)
         self.CRE_Target_layer = BioStreamLinear(
             self.n_direct,
             1,
@@ -561,22 +561,22 @@ class GeneSpecificModel(nn.Module):
     def forward(self, tf_expr, cre_expr=None):
         batch_size = tf_expr.shape[0]
 
-        # TF-TF传播
+        # TF-TF propagation
         TF_exp_emb = F.relu(self.TF_TF_layer(tf_expr))
 
         if cre_expr is None:
             cre_expr = torch.zeros(batch_size, self.n_all_CREs, device=tf_expr.device)
 
-        # 拼接TF_exp_emb和CRE_exp
+        # Spliced TF_exp_emb and CRE_exp
         TF_emb_CRE_exp = torch.cat([TF_exp_emb, cre_expr], dim=1)
 
-        # TF+CRE → CRE传播: TF_emb_CRE_exp → CRE_exp_emb
+        # TF+CRE → CRE propagation: TF_emb_CRE_exp → CRE_exp_emb
         CRE_exp_emb = F.relu(self.TF_CRE_layer(TF_emb_CRE_exp))
 
         # CRE_exp_emb → CRE_exp_emb_direct
         CRE_exp_emb_direct = F.relu(self.CRE_CRE_layer(CRE_exp_emb))
 
-        # CRE-Target传播: CRE_exp_emb_direct → Target_predict
+        #CRE-Target propagation: CRE_exp_emb_direct → Target_predict
         Target_predict = self.CRE_Target_layer(CRE_exp_emb_direct)
 
         return Target_predict
@@ -594,14 +594,14 @@ class GeneExpressionPredictor:
 
     def prepare_data(self, tf_expr, cre_expr, target_expr, train_df=None, test_size=0.2, random_state=42):
         """
-        切分训练集和测试集
+        Split the training set and the test set
         """
         if isinstance(tf_expr, pd.DataFrame):
             self.cell_ids = tf_expr.columns.tolist()
         else:
             self.cell_ids = None
 
-        # 基因顺序与global_network一致
+        # Gene sequence and global_"network consistency
         if isinstance(tf_expr, pd.DataFrame):
             tf_genes = tf_expr.index.tolist()
             network_tf_genes = self.global_network.TF_names
@@ -621,7 +621,7 @@ class GeneExpressionPredictor:
 
             tf_expr = aligned_tf_expr.values.T
         else:
-            # 如果已经是numpy数组，假设顺序已经对齐
+            # If it is already a numpy array, assume that the order has been aligned
             tf_expr = np.asarray(tf_expr)
 
         if isinstance(cre_expr, pd.DataFrame):
@@ -670,7 +670,7 @@ class GeneExpressionPredictor:
         self.cre_expr = cre_expr
         self.target_expr = target_expr
 
-        # 使用train_df划分训练集和测试集
+        # Use train_df divides the training set and the test set
         if train_df is not None:
             if self.cell_ids is None:
                 raise ValueError("当使用train_df时，tf_expr必须是DataFrame以提供细胞ID")
@@ -721,7 +721,7 @@ class GeneExpressionPredictor:
                            save_dir=None,
                            verbose=False):
         """
-        同时训练和评估以找每个基因到最优模型
+        Train and evaluate simultaneously to find each gene to the optimal model
         """
         if self.tf_expr is None or self.target_expr is None:
             raise ValueError("Data not prepared. Call prepare_data first.")
@@ -730,7 +730,7 @@ class GeneExpressionPredictor:
             gene_type = 'Target' if gene_name in self.global_network.Target_names else 'TF'
 
         gene_network, sub_network_dfs = self.global_network.get_gene_specific_network(gene_name, gene_type=gene_type)
-        gene_network['gene_type'] = gene_type  # 添加基因类型信息供Dataset使用
+        gene_network['gene_type'] = gene_type  # Add gene type information for the Dataset to use
 
         if save_dir and sub_network_dfs:
             pass
@@ -809,7 +809,7 @@ class GeneExpressionPredictor:
                         all_preds.extend(outputs.cpu().numpy())
                         all_targets.extend(target_batch.cpu().numpy())
 
-                # 计算Pearson相关系数
+                # Calculate the Pearson correlation coefficient
                 all_preds = np.array(all_preds).flatten()
                 all_targets = np.array(all_targets).flatten()
                 correlation, _ = pearsonr(all_preds, all_targets)
@@ -819,7 +819,7 @@ class GeneExpressionPredictor:
                         f"Epoch {epoch + 1}/{epochs}, Test Loss: {test_loss / len(test_loader):.6f}, Correlation: {correlation:.6f}")
                 model.train()
 
-        # 最终评估
+        # Final assessment
         model.eval()
         all_preds = []
         all_targets = []
@@ -843,7 +843,7 @@ class GeneExpressionPredictor:
                 all_preds.extend(outputs.cpu().numpy())
                 all_targets.extend(target_batch.cpu().numpy())
 
-        # 计算评估指标
+        # Calculate the evaluation indicators
         all_preds = np.array(all_preds).flatten()
         all_targets = np.array(all_targets).flatten()
         correlation, p_value = pearsonr(all_preds, all_targets)
@@ -851,14 +851,14 @@ class GeneExpressionPredictor:
         test_loss = np.mean((all_preds - all_targets) ** 2)
         print(f"Final Test Loss: {test_loss:.6f}, Correlation: {correlation:.6f}, p-value: {p_value:.6f}")
 
-        # 保存模型
+        # Save the model
         if save_dir is not None:
             os.makedirs(save_dir, exist_ok=True)
             model_path = os.path.join(save_dir, f"{gene_name}_model.pth")
             torch.save(model.state_dict(), model_path)
             print(f"Model saved to {model_path}")
 
-        # 构建评估结果
+        # Save the model
         evaluation = {
             'test_loss': test_loss,
             'correlation': correlation,
@@ -875,9 +875,9 @@ class GeneExpressionPredictor:
         model.eval()
         gene_network = model.gene_network
 
-        # 如果未提供表达数据，使用测试集
+        # If no expression data is provided, use the test set
         if tf_expr is None:
-            # 使用已有的测试集
+            # Use the existing test set
             gene_network['gene_type'] = gene_network.get('gene_type', 'Target')  # 确保有基因类型信息
             test_dataset = ExpressionDataset(
                 self.tf_expr,
@@ -922,7 +922,7 @@ class GeneExpressionPredictor:
 
     def predict_with_structural_knockout(self, model, tf_expr, cre_expr, cre_knockout_list: list):
         """
-        在动态屏蔽模型权重（结构性敲除）后进行预测。
+        Make predictions after dynamically masking the model weights (structural knockout).
         """
         if not cre_knockout_list:
             return self.predict(model, tf_expr, cre_expr)
@@ -953,7 +953,7 @@ class GeneExpressionPredictor:
             return self.predict(model, tf_expr, cre_expr)
 
         finally:
-            # 无论成功还是失败，都恢复模型的原始权重
+            # Whether it succeeds or fails, the original weights of the model are restored
             model.TF_CRE_layer.weight.data = original_weights['TF_CRE']
             model.CRE_CRE_layer.weight.data = original_weights['CRE_CRE']
             model.CRE_Target_layer.weight.data = original_weights['CRE_Target']
@@ -973,11 +973,11 @@ class GeneExpressionPredictor:
 
     def analyze_weights(self, gene_name: str, model_path: str):
         """
-        加载一个已训练的基因特异性模型，并将其参数解析为带权重的多层网络。
+        Load a trained gene-specific model and parse its parameters into a weighted multi-layer network.
         """
         print(f"--- 正在解析基因 {gene_name} 的模型权重 ---")
 
-        # 加载模型和其内部保存的网络结构
+        # Load the model and the network structure saved inside it
         model = self.load_model(gene_name, model_path)
         gene_network = model.gene_network
 
@@ -995,7 +995,7 @@ class GeneExpressionPredictor:
 
         all_networks_list = []
 
-        # TF-TF 层
+        # TF-TF layer
         rows, cols = np.nonzero(tf_tf_weights)
         if len(rows) > 0:
             df = pd.DataFrame({
@@ -1006,7 +1006,7 @@ class GeneExpressionPredictor:
             df['edge_id_type'] = 'TF_TF'
             all_networks_list.append(df)
 
-        # TF-CRE 层
+        # TF-CRE layer
         rows, cols = np.nonzero(tf_cre_weights)
         tf_source_mask = cols < gene_network['n_TFs']
         if np.any(tf_source_mask):
@@ -1019,7 +1019,7 @@ class GeneExpressionPredictor:
             df['edge_id_type'] = 'TF_CRE'
             all_networks_list.append(df)
 
-        # CRE-CRE 层
+        # CRE-CRE layer
         rows, cols = np.nonzero(cre_cre_weights)
         if len(rows) > 0 and direct_cre_names:
             df = pd.DataFrame({
@@ -1030,7 +1030,7 @@ class GeneExpressionPredictor:
             df['edge_id_type'] = 'CRE_CRE'
             all_networks_list.append(df)
 
-        # CRE-Target/TF 层
+        # CRE-Target/TF layer
         rows, cols = np.nonzero(cre_target_weights)
         if len(rows) > 0 and direct_cre_names:
             output_layer_name = 'CRE-Target' if gene_network['gene_type'] == 'Target' else 'CRE-TF'
@@ -1132,11 +1132,11 @@ def simulate_perturbation(perturbations: dict,
         print(f"将对以下CRE进行模型结构性敲除: {cre_knockout_list}")
 
 
-    # 转换为预测函数所需的numpy数组格式(细胞 x 基因)
+    # The numpy array format (cell x gene) required for conversion to the prediction function
     perturbed_tf_expr_np = perturbed_tf_expr_df.values.T
     perturbed_cre_expr_np = perturbed_cre_expr_df.values.T
 
-    # 寻找受该TF和CRE调控的基因
+    # Search for genes regulated by this TF and CRE
     all_perturbed_entities = list(perturbations.keys())
     affected_genes = set()
     for filename in os.listdir(models_dir):
@@ -1193,10 +1193,10 @@ def simulate_perturbation(perturbations: dict,
                 all_predictions[gene_name] = np.full(num_samples, np.nan)
 
     else:
-        # 并行处理 - 使用进程池
+        # Parallel processing uses a process pool
         print(f"使用 {ncores} 个核心进行并行处理...")
 
-        # 准备global_network信息用于子进程重建
+        # Prepare global_The network information is used for the reconstruction of child processes
         global_network_info = {
             'TF_names': predictor.global_network.TF_names,
             'CRE_names': predictor.global_network.CRE_names,
@@ -1209,22 +1209,22 @@ def simulate_perturbation(perturbations: dict,
             'use_symbol': True
         }
 
-        # 准备所有任务的参数
+        # Prepare the parameters for all tasks
         args_list = []
         for gene_name in affected_genes:
             model_path = os.path.join(models_dir, f"{gene_name}_model.pth")
             args_list.append((gene_name, model_path, perturbed_tf_expr_np, perturbed_cre_expr_np,
                               global_network_info, models_dir))
 
-        # 使用ProcessPoolExecutor进行并行处理
+        # Use ProcessPoolExecutor for parallel processing
         with ProcessPoolExecutor(max_workers=ncores) as executor:
-            # 提交所有任务
+            # Submit all tasks
             future_to_gene = {
                 executor.submit(_predict_single_gene_knockout_standalone, args): args[0]
                 for args in args_list
             }
 
-            # 收集结果
+            # Collect results
             for future in tqdm(as_completed(future_to_gene),
                                total=len(affected_genes),
                                desc=f"靶基因"):
@@ -1245,10 +1245,10 @@ def simulate_perturbation(perturbations: dict,
 
     return gene_predict_df
 
-# simulate_knockout 多进程组件
+# simulate_knockout Multiprocessing Component
 def _predict_single_gene_knockout_standalone(args):
     """
-    独立的基因预测函数，在子进程中运行
+    An independent gene prediction function runs in the child process
     """
     (gene_name, model_path, perturbed_tf_expr_np, cre_expr_np,
      global_network_info, models_dir) = args
@@ -1257,14 +1257,14 @@ def _predict_single_gene_knockout_standalone(args):
         return gene_name, np.full(perturbed_tf_expr_np.shape[0], np.nan)
 
     try:
-        # 在子进程中重新创建所有必要的对象
+        # Recreate all necessary objects in the child process
         global_network = GlobalNetworkManager(**global_network_info)
         predictor = GeneExpressionPredictor(global_network)
 
         model = predictor.load_model(gene_name, model_path)
         predictions = predictor.predict(model, tf_expr=perturbed_tf_expr_np, cre_expr=cre_expr_np)
 
-        # 清理内存
+        # Clear the memory
         del model, predictor, global_network
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -1276,7 +1276,7 @@ def _predict_single_gene_knockout_standalone(args):
         return gene_name, np.full(perturbed_tf_expr_np.shape[0], np.nan)
 
 
-# 改写 SCENIC+ code 进行扰动建模
+# Rewrite SCENIC+ code for perturbation modeling
 from scipy import sparse
 from sklearn.neighbors import NearestNeighbors
 from scipy.stats import norm as normal
@@ -1293,7 +1293,7 @@ def _project_perturbation_in_embedding(
         embedding,
         sigma_corr=0.05, n_cpu=1):
     """
-    计算扰动在嵌入空间中的投影 (delta embedding)
+    Calculate the projection of the perturbation in the embedding space (delta embedding)
     """
     delta_matrix = perturbed_matrix_np.astype('double') - original_matrix_np.astype('double')
 
@@ -1306,7 +1306,7 @@ def _project_perturbation_in_embedding(
     p = np.linspace(0.5, 0.1, neigh_ixs.shape[1])
     p = p / p.sum()
 
-    # 随机抽取邻居计算
+    # Randomly select neighbors for calculation
     sampling_ixs = np.stack([np.random.choice(neigh_ixs.shape[1],
                                               size=(int(0.3 * (n_neighbors + 1)),),
                                               replace=False,
@@ -1321,7 +1321,7 @@ def _project_perturbation_in_embedding(
                                       shape=(neigh_ixs.shape[0],
                                              neigh_ixs.shape[0]))
 
-    # 计算相关性
+    # Calculate the correlation
     perturbed_matrix_T = np.ascontiguousarray(perturbed_matrix_np.T)
     delta_matrix_T = np.ascontiguousarray(delta_matrix.T)
 
@@ -1329,11 +1329,11 @@ def _project_perturbation_in_embedding(
     corrcoef[np.isnan(corrcoef)] = 1
     np.fill_diagonal(corrcoef, 0)
 
-    # 计算转移概率
+    # Calculate the transition probability
     transition_prob = np.exp(corrcoef / sigma_corr) * embedding_knn.toarray()
     transition_prob /= transition_prob.sum(1)[:, None]
 
-    # 计算方向向量
+    # Calculate the direction vector
     unitary_vectors = embedding.T[:, None, :] - embedding.T[:, :, None]
     unitary_vectors /= np.linalg.norm(unitary_vectors, ord=2, axis=0)
     np.fill_diagonal(unitary_vectors[0, ...], 0)
@@ -1345,11 +1345,11 @@ def _project_perturbation_in_embedding(
     return delta_embedding
 
 
-# 文件：BioStreamNet.py (或 test_Target_predicted.py)
+# File: BioStreamNet.py (or test_Target_predicted.py)
 
 def _calculate_grid_arrows(embedding, delta_embedding, offset_frac, n_grid_cols, n_grid_rows, n_neighbors, n_cpu):
     """
-    准备箭头网格
+    Prepare the arrow grid
     """
     min_x, max_x = np.min(embedding[:, 0]), np.max(embedding[:, 0])
     min_y, max_y = np.min(embedding[:, 1]), np.max(embedding[:, 1])
@@ -1396,7 +1396,7 @@ def plot_perturbation_effect_in_embedding(
         save: Optional[str] = None,
         **kwargs):
     """
-    在二维嵌入图上绘制扰动效应的箭头网格
+   Draw the arrow grid of the perturbation effect on the two-dimensional embedding graph
     """
     delta_embedding = _project_perturbation_in_embedding(
         original_matrix_np=original_matrix_df.values,
@@ -1427,7 +1427,7 @@ def plot_perturbation_effect_in_embedding(
 
     fig, ax = plt.subplots(figsize=figsize)
 
-    # 绘制细胞散点图
+    #Draw a scatter plot of cells
     groups = cell_metadata_df[variable_to_color].unique()
     for group in groups:
         idx_to_plot = cell_metadata_df[variable_to_color] == group
@@ -1438,7 +1438,7 @@ def plot_perturbation_effect_in_embedding(
             s=10, alpha=0.6
         )
 
-    # 绘制流线图
+    # Draw the flow graph
     ax.streamplot(
         grid_xy.reshape(grid_n_cols, grid_n_rows, 2)[:, :, 0],
         grid_xy.reshape(grid_n_cols, grid_n_rows, 2)[:, :, 1],
@@ -1563,7 +1563,7 @@ def run_perturbation_analysis(
     original_full_matrix_df = pd.concat([original_tf_expr_df, original_target_expr_df])
     original_matrix_aligned_df = original_full_matrix_df.loc[gene_predict_df.index]
 
-    # 准备扰动后表达矩阵
+    # Prepare the expression matrix after perturbation
     perturbed_matrix_df = original_matrix_aligned_df.copy()
     perturbed_matrix_df.update(gene_predict_df)
 
