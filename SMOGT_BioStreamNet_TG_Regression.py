@@ -19,7 +19,7 @@ import scanpy as sc
 import multiprocessing
 from functools import partial
 
-# The sample version of this module file (with consistent naming) has been uploaded to Zenodo (SMOGT_BioStreamNet_TG_Regression)
+# The sample version of this module file (with consistent naming) has been uploaded to Zenodo (https://zenodo.org/records/19111535)
 
 # File directory configuration
 output_dir = '/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/HSPC_preturb'
