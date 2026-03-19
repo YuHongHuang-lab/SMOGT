@@ -27,7 +27,7 @@ def train_reg_epoch(model,
                     neg_epoch_limit=None,
                     node_label_dict=None):
     """
-    单次训练函数
+    Single epoch training function
     """
     mes_criterion = torch.nn.MSELoss()
     bce_criterion = torch.nn.BCELoss()
@@ -145,8 +145,8 @@ def train_reg_epoch(model,
                 bce_criterion,
                 edge_type_weights=edge_type_weights)
 
-            # region 随机抽取先验网络里的边，看看预测的边是否在先验边中有偏好
-            # 随机抽取先验网络里的边，看看预测的边是否在先验边中有偏好
+            # region Randomly sample edges from prior network to check prediction bias towards prior edges
+            # Randomly sample edges from prior network to check prediction bias towards prior edges
             # for edge_type in base_data.prior_edge_index_dict.keys():
             #     if str(edge_type) in test_neg and edge_type in base_data.prior_edge_attr_dict:
             #         src_type, _, dst_type = edge_type
@@ -170,25 +170,25 @@ def train_reg_epoch(model,
             #
             #         # Perform sampling based on edge type, similar to sample_negative_edges
             #         if src_type == 'CRE' and dst_type == 'CRE':
-            #             # 对CRE-CRE边按染色体进行负采样
+            #             # Negative sampling for CRE-CRE edges by chromosome
             #             if node_label_dict and src_type in node_label_dict:
             #                 cre_labels = node_label_dict[src_type]
             #
-            #                 # 提取染色体信息
+            #                 # Extract chromosome information
             #                 chromosomes = np.array([label.split('-')[0] for label in cre_labels.values()])
             #                 unique_chromosomes = np.unique(chromosomes)
             #
             #                 all_neg_edges = []
             #
-            #                 # 对每个染色体单独处理
+            #                 # Process each chromosome individually
             #                 for chrom in unique_chromosomes:
             #                     chrom_indices = np.where(chromosomes == chrom)[0]
             #                     if len(chrom_indices) > 1:
-            #                         # 创建局部到全局索引的映射
+            #                         # Create mapping from local to global indices
             #                         idx_to_local = {idx: local_idx for local_idx, idx in enumerate(chrom_indices)}
             #                         local_to_idx = {local_idx: idx for idx, local_idx in idx_to_local.items()}
             #
-            #                         # 找出当前染色体内的正边
+            #                         # Find positive edges within current chromosome
             #                         sampled_pos_np = sampled_pos_edges.cpu().numpy()
             #                         src_matches = np.isin(sampled_pos_np[0], chrom_indices)
             #                         dst_matches = np.isin(sampled_pos_np[1], chrom_indices)
@@ -198,24 +198,24 @@ def train_reg_epoch(model,
             #                             chrom_pos_edges = sampled_pos_edges[:, torch.from_numpy(mask)]
             #
             #                             if chrom_pos_edges.size(1) > 0:
-            #                                 # 转换为局部索引
+            #                                 # Convert to local indices
             #                                 local_pos_edges = torch.tensor([
             #                                     [idx_to_local[idx.item()] for idx in chrom_pos_edges[0]],
             #                                     [idx_to_local[idx.item()] for idx in chrom_pos_edges[1]]
             #                                 ])
             #
-            #                                 # 计算负样本数量
+            #                                 # Calculate number of negative samples
             #                                 local_neg_sample_size = chrom_pos_edges.size(1)
             #
             #                                 if local_neg_sample_size > 0:
-            #                                     # 在染色体内生成负样本
+            #                                     # Generate negative samples within chromosome
             #                                     local_neg_edges = negative_sampling(
             #                                         edge_index=local_pos_edges,
             #                                         num_nodes=(len(chrom_indices), len(chrom_indices)),
             #                                         num_neg_samples=local_neg_sample_size
             #                                     )
             #
-            #                                     # 转换回全局索引
+            #                                     # Convert back to global indices
             #                                     global_neg_edges = torch.tensor([
             #                                         [local_to_idx[idx.item()] for idx in local_neg_edges[0]],
             #                                         [local_to_idx[idx.item()] for idx in local_neg_edges[1]]
@@ -223,7 +223,7 @@ def train_reg_epoch(model,
             #
             #                                     all_neg_edges.append(global_neg_edges)
             #
-            #                 # 添加少量全局负样本（20%）
+            #                 # Add a small number of global negative samples (20%)
             #                 global_neg_sample_size = int(sampled_pos_edges.size(1) * 0.2)
             #                 if global_neg_sample_size > 0:
             #                     global_neg_edges = negative_sampling(
@@ -237,7 +237,7 @@ def train_reg_epoch(model,
             #                 if all_neg_edges:
             #                     sampled_neg_edges = torch.cat(all_neg_edges, dim=1)
             #                 else:
-            #                     # 如果染色体负采样失败，则使用常规负采样
+            #                     # Use regular negative sampling if chromosome-based sampling fails
             #                     sampled_neg_edges = negative_sampling(
             #                         edge_index=sampled_pos_edges,
             #                         num_nodes=(base_data.x_dict[src_type].size(0),
@@ -245,7 +245,7 @@ def train_reg_epoch(model,
             #                         num_neg_samples=num_neg_edges
             #                     )
             #             else:
-            #                 # 如果没有染色体信息，使用常规负采样
+            #                 # Use regular negative sampling if no chromosome information is available
             #                 sampled_neg_edges = negative_sampling(
             #                     edge_index=sampled_pos_edges,
             #                     num_nodes=(base_data.x_dict[src_type].size(0),
@@ -254,7 +254,7 @@ def train_reg_epoch(model,
             #                 )
             #
             #         elif src_type == 'TF' and dst_type == 'CRE':
-            #             # 对TF-CRE边使用TF感知的负采样策略
+            #             # Use TF-aware negative sampling strategy for TF-CRE edges
             #             unique_TFs = torch.unique(sampled_pos_edges[0]).cpu().numpy()
             #
             #             if len(unique_TFs) > 0:
@@ -277,7 +277,7 @@ def train_reg_epoch(model,
             #                     sampled_neg_edges[1].tolist()
             #                 ])
             #             else:
-            #                 # 如果没有TFs，使用常规负采样
+            #                 # Use regular negative sampling if no TFs are available
             #                 sampled_neg_edges = negative_sampling(
             #                     edge_index=sampled_pos_edges,
             #                     num_nodes=(base_data.x_dict[src_type].size(0),
@@ -285,7 +285,7 @@ def train_reg_epoch(model,
             #                     num_neg_samples=sampled_pos_edges.size(1)
             #                 )
             #         else:
-            #             # 对其他边类型使用标准负采样
+            #             # Use standard negative sampling for other edge types
             #             sampled_neg_edges = negative_sampling(
             #                 edge_index=sampled_pos_edges,
             #                 num_nodes=(base_data.x_dict[src_type].size(0),
@@ -327,7 +327,7 @@ def train_reg_epoch(model,
         test_auc = calculate_auc(test_preds.cpu(), test_labels.cpu())
         test_aupr = calculate_aupr(test_preds.cpu(), test_labels.cpu())
 
-        # 打印测试结果
+        # Print test results
         log_str = [f"Epoch {epoch + 1}/{num_epochs} Batch {idx + 1}/{len(data_loader)} neg_epoch {neg_epoch}"]
 
         log_str.append("Training:")
@@ -350,7 +350,7 @@ def train_reg_epoch(model,
 
         logging.info(" | ".join(log_str))
 
-        # 判断是否满足早停条件
+        # Check early stopping conditions
         first_correlation = batch_test_metrics[list(batch_test_metrics.keys())[0]]['mean_correlation']
 
         # if ((idx > idx_limit or epoch > epoch_limit) and
@@ -412,7 +412,7 @@ def train_reg_model(model,
                     neg_epoch=None,
                     node_label_dict=None):
     """
-    总训练函数
+    Main training function
     """
 
     for epoch in range(num_epochs):
