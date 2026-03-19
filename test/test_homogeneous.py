@@ -16,7 +16,7 @@ from utils import *
 
 class HomogeneousGATMultiTask(torch.nn.Module):
     """
-    基于GAT的SMOGT
+    SMOGT based on GAT
     """
 
     def __init__(self, in_channels, hidden_channels, out_channels, expression_out_channels,
@@ -27,46 +27,46 @@ class HomogeneousGATMultiTask(torch.nn.Module):
         self.dropout = dropout
         self.heads = heads
 
-        # GAT层列表
+        # GAT layer list
         self.gat_layers = torch.nn.ModuleList()
 
-        # 根据原异构逻辑构建GAT层
+        # Build GAT layers according to original heterogeneous logic
         for i in range(layer_nums):
             if layer_nums == 1:
-                # 单层情况
+                # Single layer case
                 in_dim = in_channels
                 out_dim = hidden_channels
                 self.gat_layers.append(
                     GATConv(in_dim, out_dim, heads=1, concat=False, dropout=dropout)
                 )
             else:
-                # 多层情况
+                # Multi-layer case
                 if i == 0:
-                    # 第0层：raw_dim -> hidden_dim * 2
+                    # Layer 0: raw_dim -> hidden_dim * 2
                     in_dim = in_channels
                     out_dim = hidden_channels * 2
                     self.gat_layers.append(
                         GATConv(in_dim, out_dim, heads=heads, concat=False, dropout=dropout)
                     )
                 elif i == 1:
-                    # 第1层：hidden_dim * 2 -> hidden_dim
+                    # Layer 1: hidden_dim * 2 -> hidden_dim
                     in_dim = hidden_channels * 2
                     out_dim = hidden_channels
                     self.gat_layers.append(
                         GATConv(in_dim, out_dim, heads=heads, concat=False, dropout=dropout)
                     )
                 else:
-                    # 第2层及以后：hidden_dim -> hidden_dim
+                    # Layer 2 and above: hidden_dim -> hidden_dim
                     in_dim = hidden_channels
                     out_dim = hidden_channels
                     self.gat_layers.append(
                         GATConv(in_dim, out_dim, heads=heads, concat=False, dropout=dropout)
                     )
 
-        # 最终线性层：hidden_dim -> embedding_dim（与原异构逻辑一致）
+        # Final linear layer: hidden_dim -> embedding_dim (consistent with original heterogeneous logic)
         self.lin = torch.nn.Linear(hidden_channels, out_channels)
 
-        # 基因表达重构解码器（与原异构逻辑结构一致）
+        # Gene expression reconstruction decoder (consistent with original heterogeneous logic structure)
         self.expression_decoder = torch.nn.Sequential(
             torch.nn.Linear(out_channels, hidden_channels),
             torch.nn.ReLU(),
@@ -78,29 +78,29 @@ class HomogeneousGATMultiTask(torch.nn.Module):
         )
 
     def encode(self, x, edge_index):
-        """编码器：将节点特征编码为嵌入，遵循原异构逻辑的层数处理"""
+        """Encoder: Encode node features into embeddings, following the layer processing logic of the original heterogeneous model"""
         current_x = x
 
-        # 应用GAT层
+        # Apply GAT layers
         for i, gat_layer in enumerate(self.gat_layers):
             current_x = F.dropout(current_x, p=self.dropout, training=self.training)
             current_x = gat_layer(current_x, edge_index)
             current_x = F.relu(current_x)
 
-            # 在第1层后应用dropout（与原异构逻辑一致）
+            # Apply dropout after layer 1 (consistent with original heterogeneous logic)
             if i == 1:
                 current_x = F.dropout(current_x, p=self.dropout, training=self.training)
 
-        # 最终线性变换
+        # Final linear transformation
         z = self.lin(current_x)
         return z
 
     def decode_link(self, z, edge_label_index):
-        """链接预测解码器：使用内积预测边的存在概率"""
+        """Link prediction decoder: Predict edge existence probability using inner product"""
         return (z[edge_label_index[0]] * z[edge_label_index[1]]).sum(dim=-1)
 
     def decode_expression(self, z):
-        """基因表达重构解码器：重构基因表达值"""
+        """Gene expression reconstruction decoder: Reconstruct gene expression values"""
         return self.expression_decoder(z)
 
 
@@ -125,7 +125,7 @@ def evaluate_expression_recon(model, data, device):
         eval_mask = data.regression_node_mask.to(device) & data.expression_test_mask.to(device)
         if eval_mask.sum() == 0: return 0.0
         pred_y = model.decode_expression(z)[eval_mask]
-        # 注意：这里也需要与训练保持一致，使用data.x作为真实值
+        # Note: Consistent with training, use data.x as ground truth
         true_y = data.x.to(device)[eval_mask]
         pred_y_flat, true_y_flat = pred_y.cpu().numpy().flatten(), true_y.cpu().numpy().flatten()
         if len(pred_y_flat) < 2: return 0.0
@@ -135,7 +135,7 @@ def evaluate_expression_recon(model, data, device):
 
 def evaluate_tf_cre_metrics_homogeneous(model, data, device, tf_eval_data):
     """
-    同构版本的 TF-CRE 评估函数。
+    TF-CRE evaluation function for homogeneous graph version.
     """
     model.eval()
     results = {}
@@ -165,32 +165,32 @@ def evaluate_tf_cre_metrics_homogeneous(model, data, device, tf_eval_data):
 
 
 def prepare_homogeneous_tf_cre_evaluation_data(hetero_data, data, offsets, min_positive_edges=100):
-    """为同构图评估准备 TF-CRE 数据"""
+    """Prepare TF-CRE data for homogeneous graph evaluation"""
     tf_eval_data = {}
 
-    # 获取节点类型和偏移量
+    # Get node types and offsets
     node_type_map = {node_type: i for i, node_type in enumerate(hetero_data.node_types)}
     tf_type_idx = node_type_map['TF']
     cre_type_idx = node_type_map['CRE']
 
-    # 找到所有 TF 节点的全局索引
+    # Find global indices of all TF nodes
     all_tf_indices = (data.node_type == tf_type_idx).nonzero(as_tuple=True)[0]
 
-    # 获取异构图中的 TF-CRE 边 (局部索引)
+    # Get TF-CRE edges in heterogeneous graph (local indices)
     tf_cre_edge_type = ('TF', 'edge', 'CRE')
     if tf_cre_edge_type not in hetero_data.edge_types:
-        logging.warning("未在异构图中找到 TF-CRE 边类型")
+        logging.warning("TF-CRE edge type not found in heterogeneous graph")
         return {}
 
     pos_edges_local = hetero_data[tf_cre_edge_type].edge_index
 
-    # 将局部索引转换为全局索引
+    # Convert local indices to global indices
     pos_edges_global = torch.stack([
         pos_edges_local[0] + offsets['TF'],
         pos_edges_local[1] + offsets['CRE']
     ])
 
-    # 按TF对正样本边进行分组
+    # Group positive edges by TF
     tf_to_pos_cres = {}
     for i in range(pos_edges_global.size(1)):
         tf_id = pos_edges_global[0, i].item()
@@ -199,17 +199,17 @@ def prepare_homogeneous_tf_cre_evaluation_data(hetero_data, data, offsets, min_p
             tf_to_pos_cres[tf_id] = set()
         tf_to_pos_cres[tf_id].add(cre_id)
 
-    # MODIFIED: 收集所有在正边中出现的CRE节点，而不是所有CRE节点
+    # MODIFIED: Collect all CRE nodes that appear in positive edges instead of all CRE nodes
     all_cre_indices_in_pos_edges = set()
     for cre_set in tf_to_pos_cres.values():
         all_cre_indices_in_pos_edges.update(cre_set)
 
-    # 为每个符合条件的TF创建评估数据
+    # Create evaluation data for each eligible TF
     for tf_id in all_tf_indices:
         tf_id = tf_id.item()
         if tf_id in tf_to_pos_cres and len(tf_to_pos_cres[tf_id]) >= min_positive_edges:
             pos_cres_set = tf_to_pos_cres[tf_id]
-            # MODIFIED: 负样本CRE只从在正边中出现的CRE中选择
+            # MODIFIED: Negative sample CREs are only selected from CREs appearing in positive edges
             neg_cres_set = all_cre_indices_in_pos_edges - pos_cres_set
 
             if not neg_cres_set:
@@ -233,7 +233,7 @@ def train_epoch(model, data, optimizer, device, link_loss_weight):
     optimizer.zero_grad()
     z = model.encode(data.x.to(device), data.train_edge_index.to(device))
 
-    # 链接预测损失
+    # Link prediction loss
     pos_edge_index = data.train_edge_index.to(device)
     neg_edge_index = negative_sampling(
         edge_index=pos_edge_index, num_nodes=data.num_nodes,
@@ -243,12 +243,12 @@ def train_epoch(model, data, optimizer, device, link_loss_weight):
     link_out = model.decode_link(z, edge_label_index)
     loss_link = F.binary_cross_entropy_with_logits(link_out, edge_label)
 
-    # 基因表达重构损失
+    # Gene expression reconstruction loss
     recon_mask = data.regression_node_mask.to(device) & data.expression_train_mask.to(device)
     loss_expr = 0
     if recon_mask.sum() > 0:
         pred_y = model.decode_expression(z)[recon_mask]
-        # MODIFIED: 使用 data.x 作为真实值
+        # MODIFIED: Use data.x as ground truth
         true_y = data.x.to(device)[recon_mask]
         loss_expr = F.mse_loss(pred_y, true_y)
 
@@ -265,45 +265,45 @@ logging.basicConfig(
     level=logging.INFO if config["log"]["level"] == "INFO" else logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
-logging.info("--- 开始同构图版本（多任务）训练流程 ---")
+logging.info("--- Starting Homogeneous Graph Version (Multi-Task) Training Pipeline ---")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-logging.info(f"使用设备: {device}")
+logging.info(f"Using device: {device}")
 
 hetero_dataset = BioDataset(config=config["dataset"])
 hetero_data = hetero_dataset.data
 
-# --- START: 新增 - 手动计算偏移量 ---
+# --- START: New - Manually calculate offsets ---
 offsets = {}
 current_offset = 0
 for node_type in hetero_data.node_types:
     offsets[node_type] = current_offset
     current_offset += hetero_data[node_type].num_nodes
-# --- END: 新增 ---
+# --- END: New ---
 
-logging.info("将异构图数据转换为同构图...")
+logging.info("Converting heterogeneous graph data to homogeneous graph...")
 data = hetero_dataset.to_homegeneous()
 
-# --- 创建回归节点掩码 ---
+# --- Create regression node mask ---
 data.regression_node_mask = torch.zeros(data.num_nodes, dtype=torch.bool)
 for ntype in hetero_data.node_types:
     if hasattr(hetero_data[ntype], 'cluster'):
         local_regression_indices = (hetero_data[ntype].cluster == 1).nonzero(as_tuple=True)[0]
         if len(local_regression_indices) > 0:
-            # MODIFIED: 使用正确的 offsets 字典
+            # MODIFIED: Use correct offsets dictionary
             offset = offsets[ntype]
             global_indices = local_regression_indices + offset
             data.regression_node_mask[global_indices] = True
-logging.info(f"共找到 {data.regression_node_mask.sum().item()} 个节点用于表达重构 (cluster=1)。")
+logging.info(f"Found {data.regression_node_mask.sum().item()} nodes for expression reconstruction (cluster=1).")
 
-# --- 创建训练/测试掩码 ---
+# --- Create train/test masks ---
 k_fold_splits = split_nodes(hetero_data, k_fold=config['dataset']['k_fold'], seed=config['dataset']['seed'])
 fold_splits = {ntype: masks[0] for ntype, masks in k_fold_splits.items()}
 
 expression_train_mask = torch.zeros(data.num_nodes, dtype=torch.bool)
 expression_test_mask = torch.zeros(data.num_nodes, dtype=torch.bool)
 for ntype, masks in fold_splits.items():
-    # MODIFIED: 使用正确的 offsets 字典
+    # MODIFIED: Use correct offsets dictionary
     if ntype in offsets:
         offset = offsets[ntype]
         num_nodes_in_type = len(masks['train_mask'])
@@ -314,13 +314,13 @@ data.expression_test_mask = expression_test_mask
 
 data = split_edges(data, rate=config['dataset'].get('rate', 0.2), seed=config['dataset']['seed'], use_last_col=False)
 
-# --- 准备TF-CRE评估数据 ---
-logging.info("正在准备TF-CRE评估数据...")
-# MODIFIED: 传递 offsets 字典
+# --- Prepare TF-CRE evaluation data ---
+logging.info("Preparing TF-CRE evaluation data...")
+# MODIFIED: Pass offsets dictionary
 tf_eval_data = prepare_homogeneous_tf_cre_evaluation_data(hetero_data, data, offsets)
-logging.info(f"已为 {len(tf_eval_data)} 个TFs准备好评估数据。")
+logging.info(f"Prepared evaluation data for {len(tf_eval_data)} TFs.")
 
-# --- 模型初始化 ---
+# --- Model initialization ---
 model = HomogeneousGATMultiTask(
     in_channels=data.num_features,
     hidden_channels=config['model']['hidden_dim'],
@@ -333,9 +333,9 @@ model = HomogeneousGATMultiTask(
 optimizer = optim.Adam(model.parameters(), lr=config["training"]["learning_rate"])
 link_loss_weight = config['model'].get('edge_loss_rate', 0.5)
 
-logging.info(f"模型已初始化:\n{model}")
+logging.info(f"Model initialized:\n{model}")
 
-# --- 训练循环 ---
+# --- Training loop ---
 num_epochs = config["training"]["epochs"]
 eval_interval = config.get('tf_metrics', {}).get('interval', 10)
 
@@ -352,4 +352,4 @@ for epoch in range(1, num_epochs + 1):
         logging.info(f"Epoch: {epoch:03d}, Loss: {loss:.4f} | Link AUC: {auc:.4f}, Link AUPR: {aupr:.4f} | "
                      f"Expr Recon Corr: {corr:.4f} | TF-CRE AUPR: {avg_tf_aupr:.4f}, TF-CRE F1: {avg_tf_f1:.4f}")
 
-logging.info("--- 同构图版本（多任务）训练流程结束 ---")
+logging.info("--- Homogeneous Graph Version (Multi-Task) Training Pipeline Completed ---")
