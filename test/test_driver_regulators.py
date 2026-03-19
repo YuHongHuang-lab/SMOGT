@@ -15,7 +15,7 @@ clusters = atten_node_df['cluster'].unique()
 
 all_results = []
 
-# 对每个子群进行分析
+# Analyze each subgroup
 for cluster_id in clusters:
     cluster_genes = atten_node_df[atten_node_df['cluster'] == cluster_id]['name'].tolist()
 
@@ -30,7 +30,7 @@ for cluster_id in clusters:
     for _, row in cluster_edges.iterrows():
         G.add_edge(row['from'], row['to'], weight=row['score'])
 
-    print(f"  网络节点数: {G.number_of_nodes()}, 边数: {G.number_of_edges()}")
+    print(f"  Network node count: {G.number_of_nodes()}, edge count: {G.number_of_edges()}")
 
     if G.number_of_edges() == 0:
         continue
@@ -46,14 +46,14 @@ for cluster_id in clusters:
     root_nodes_set = root_nodes(G)
     end_nodes_set = end_nodes(G)
 
-    # MDS
+    # MDS (Minimum Dominating Set)
     try:
         mds_driver_set, mds_intermittent_nodes = MDScontrol(G.copy(), solver='SCIP')
     except Exception as e:
         mds_driver_set = set()
         mds_intermittent_nodes = set()
 
-    # MFV
+    # MFV (Minimum Feedback Vertex Set)
     try:
         mfvs_driver_set, source_nodes = MFVScontrol(G.copy(), influence_scores.loc[:, 'influence_score'], solver='SCIP')
     except Exception as e:
@@ -80,9 +80,8 @@ for cluster_id in clusters:
             'is_end_node': gene in end_nodes_set
         })
 
-# 创建所有结果的DataFrame
+# Create DataFrame for all results
 all_drivers_df = pd.DataFrame(all_results)
 
-# 保存所有驱动基因信息
+# Save all driver gene information
 all_drivers_df.to_csv(os.path.join(config['dataset']['processed_dir'], 'all_cluster_drivers_{}.csv'.format(name)), index=False)
-
