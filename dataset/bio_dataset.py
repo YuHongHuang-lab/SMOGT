@@ -22,7 +22,7 @@ from utils import *
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    force=True  # 强制重新配置日志
+    force=True  # Force reconfiguration of logging
 )
 
 class BioDataset(InMemoryDataset):
@@ -31,37 +31,37 @@ class BioDataset(InMemoryDataset):
         logging.getLogger().setLevel(logging.INFO)
 
         ################################
-        #    从配置文件中获取路径和参数    #
+        #    Get paths and parameters from configuration file    #
         ################################
-        # 数据集根目录
+        # Root directory of the dataset
         self.data_root = self.config['data_root']
-        # 子图数量
+        # Number of subgraphs
         self.num_graphs = self.config['num_graphs']
-        # 是否使用节点名称
+        # Whether to use node names
         self.use_node_name = self.config['use_node_name']
-        # 是否读取图标签
+        # Whether to read graph labels
         self.use_graph_labels = self.config.get('use_graph_labels', False)
 
         self.orige_file = self.config.get('orige_file', None)
 
-        # 节点label列名字
+        # Node label column name
         self.node_label_column = self.config.get('node_label_column', None)
-        # 边时间戳列名
+        # Edge timestamp column name
         self.edge_timestamp_column = self.config.get('edge_timestamp_column', None)
-        # 边类型列名
+        # Edge type column name
         self.edge_type_column = self.config.get('edge_type_column', None)
         self.edge_feature_column = self.config.get('edge_feature_column', None)
 
-        # 边label列名
+        # Edge label column name
         self.edge_label_column = self.config.get('edge_label_column', None)
 
-        # 是否合并图
+        # Whether to merge graphs
         self.merge_graphs = self.config.get('merge_graphs', False)
 
         self.transform = None
         self.pre_transform = None
 
-        # 调用父类构造函数
+        # Call parent class constructor
         super(BioDataset, self).__init__(self.data_root, self.transform, self.pre_transform, force_reload=self.config["force_reload"])
         self.data, self.slices = self._load_processed_data()
 
@@ -71,25 +71,25 @@ class BioDataset(InMemoryDataset):
 
     def _load_processed_data(self):
         """
-        加载处理后的数据
+        Load processed data
         :return:
         """
         if self.merge_graphs:
-            # 合并子图
+            # Merge subgraphs
             loaded_data = torch.load(os.path.join(self.processed_dir, self.processed_file_names[0]), weights_only=False)
             if isinstance(loaded_data, tuple):
-                return loaded_data  # 返回 (dataset, slices)
+                return loaded_data  # Return (dataset, slices)
             else:
-                return loaded_data, None  # 单张子图的情况
+                return loaded_data, None  # Single subgraph case
         else:
-            # 非合并模式
-            # 由 __getitem__ 控制加载
+            # Non-merge mode
+            # Controlled by __getitem__ for loading
             return None, None
 
     @property
     def raw_dir(self) -> str:
         """
-        读取配置设置原始文件目录
+        Read configuration to set raw file directory
         :return:
         """
         return self.config['raw_dir']
@@ -97,7 +97,7 @@ class BioDataset(InMemoryDataset):
     @property
     def raw_file_names(self):
         """
-        读取配置获取原始文件列表
+        Read configuration to get raw file list
         :return:
         """
         raw_file_list = []
@@ -114,7 +114,7 @@ class BioDataset(InMemoryDataset):
     @property
     def processed_dir(self) -> str:
         """
-        读取配置设置处理后文件目录
+        Read configuration to set processed file directory
         :return:
         """
         return self.config['processed_dir']
@@ -122,7 +122,7 @@ class BioDataset(InMemoryDataset):
     @property
     def processed_file_names(self) -> Union[str, List[str], Tuple[str, ...]]:
         """
-        生成处理后文件名列表
+        Generate processed file name list
         :return:
         """
         if self.merge_graphs:
@@ -133,7 +133,7 @@ class BioDataset(InMemoryDataset):
 
     @property
     def processed_paths(self) -> List[str]:
-        """返回处理后的文件路径。"""
+        """Return processed file paths."""
         return [os.path.join(self.processed_dir, f) for f in self.processed_file_names]
 
     def download(self) -> None:
@@ -146,128 +146,128 @@ class BioDataset(InMemoryDataset):
 
         data_list = []
 
-        # 如果使用标签，从标签文件读取标签
+        # If using labels, read labels from label file
         if self.use_graph_labels:
             labels_df = pd.read_csv(os.path.join(self.raw_dir, 'graph_labels.csv'))
 
         for i in range(self.num_graphs):
-            # 从自定义原始数据目录读取 CSV 文件
+            # Read CSV files from custom raw data directory
             nodes_file = os.path.join(self.raw_dir, f'graph_{i}_nodes.csv')
             edges_file = os.path.join(self.raw_dir, f'graph_{i}_edges.csv')
 
-            # 读取节点和边的原始数据
+            # Read raw node and edge data
             nodes = pd.read_csv(nodes_file)
             edges = pd.read_csv(edges_file)
 
             if self.orige_file:
                 orige_df = pd.read_csv(os.path.join(self.raw_dir, self.orige_file))
 
-            # 判断是否使用节点名称索引各个节点
+            # Determine whether to use node name to index each node
             if self.use_node_name:
-                # 使用节点名称
+                # Use node names
 
-                # 读入节点名称
+                # Read node names
                 node_names_df = pd.read_csv(os.path.join(self.raw_dir, f'graph_{i}_node_names.csv'))
-                # 初始化节点名称字典
+                # Initialize node name dictionary
                 node_dict = dict()
-                # 初始化节点id字典
+                # Initialize node id dictionary
                 id_dict = dict()
-                # 遍历节点名称
+                # Iterate through node names
                 for index, row in node_names_df.iterrows():
-                    # 判断当前节点类型是否第一次出现
+                    # Check if current node type appears for the first time
                     if row.get("type", None) in id_dict:
-                        # 非第一次出现则对应类型节点的id递增1
+                        # If not first occurrence, increment id of this node type by 1
                         id = id_dict[row.get("type", None)] + 1
                     else:
-                        # 第一次出现该类型节点id为0
+                        # First occurrence of this node type, id is 0
                         id = 0
                     id_dict[row.get("type", None)] = id
 
-                    # 写入节点名称字典
+                    # Write to node name dictionary
                     node_dict[row["name"]] = {
                         "id": id,
                         "type": row.get("type", None),
                         "cluster":row.get('cluster', -1)
                     }
 
-                # 将节点id和类型写入节点原始数据
+                # Write node id and type to raw node data
                 nodes['_id'] = nodes.iloc[:, 0].map(lambda x: node_dict[x]["id"])
                 nodes['_type'] = nodes.iloc[:, 0].map(lambda x: node_dict[x]["type"])
                 nodes['_cluster'] = nodes.iloc[:, 0].map(lambda  x: node_dict[x]['cluster'])
 
-                # 创建 HeteroData 对象，根据情况包含标签
+                # Create HeteroData object, include labels if needed
                 data = HeteroData()
 
-                # 按节点类型对节点原始数据分组
-                # 遍历全部分组
+                # Group raw node data by node type
+                # Iterate through all groups
                 grouped = nodes.groupby('_type')
                 for type_name, group in grouped:
-                    # 删除节点类型
+                    # Remove node type
                     group = group.drop(columns=['_type'])
-                    # 按节点id排序
+                    # Sort by node id
                     group = group.sort_values(by='_id')
-                    # 存储 cluster 标签 (作为整数张量)
+                    # Store cluster labels (as integer tensor)
                     if '_cluster' in group.columns:
                         data[str(type_name)].cluster = torch.tensor(group['_cluster'].values, dtype=torch.long)
                         group = group.drop(columns=['_cluster'])
                     else:
-                        # 如果没有 cluster 标签，用 -1 填充
+                        # If no cluster label, fill with -1
                         data[str(type_name)].cluster = torch.full((len(group),), -1, dtype=torch.long)
 
 
-                    # 判断是否设置节点label列
+                    # Check if node label column is set
                     if self.node_label_column:
-                        # 若存在节点label则提取后删除该列
+                        # If node label exists, extract and remove the column
                         data[str(type_name)].y = torch.tensor(group[self.node_label_column], dtype=torch.float)
                         group = group.drop(columns=[self.node_label_column])
 
                     if self.orige_file and str(type_name) in ['TF', 'Target']:
-                        # 创建节点名称和ID的映射关系
+                        # Create mapping between node names and IDs
                         name_to_id = pd.Series(group['_id'].values, index=group.iloc[:, 0])
 
-                        # 获取orige特征中与当前组节点匹配的行
+                        # Get rows in orige features matching current group nodes
                         matching_features = orige_df[orige_df.iloc[:, 0].isin(name_to_id.index)]
 
-                        # 为matching_features添加对应的节点ID
+                        # Add corresponding node IDs to matching_features
                         matching_features['_id'] = matching_features.iloc[:, 0].map(name_to_id)
 
-                        # 按节点ID排序
+                        # Sort by node ID
                         matching_features = matching_features.sort_values('_id')
 
-                        # 验证所有节点都有对应的特征
+                        # Verify all nodes have corresponding features
                         if len(matching_features) != len(group):
                             missing_nodes = set(group.iloc[:, 0]) - set(matching_features.iloc[:, 0])
                             raise ValueError(f"Missing features for nodes in {type_name}: {missing_nodes}")
 
-                        # 验证ID顺序是否一致
+                        # Verify ID order consistency
                         if not all(matching_features['_id'].values == group['_id'].values):
                             raise ValueError(f"ID mismatch detected for {type_name} nodes")
 
-                        # 提取特征（排除第一列节点名称和_id列）
+                        # Extract features (exclude first column (node name) and _id column)
                         z = torch.tensor(matching_features.iloc[:, 1:-1].values, dtype=torch.float)
                         data[str(type_name)].z = z
 
                         logging.info(f"Added expression features for {type_name}: shape {z.shape}")
 
-                    # 删除节点id
+                    # Remove node id
                     group = group.drop(columns=['_id'])
 
-                    # 提取其余列作为节点特征
+                    # Extract remaining columns as node features
                     data[str(type_name)].x = torch.tensor(group.iloc[:, 1:].values, dtype=torch.float)
                     data[str(type_name)].label = group.iloc[:, 0].values
 
 
-                # 提取边索引和边特征
+                # Extract edge indices and edge features
                 edge_dict = dict()
 
-                # 记录需要添加的反向边
+                # Record reverse edges to be added
                 reverse_edge_dict = dict()
 
-                # 初始化边类型列为None
+                # Initialize edge type column as None
                 edge_type_column = None
-                # 判断是否设置边类型列
+                # Check if edge type column is set
                 if self.edge_type_column:
-                    # 若设置则提取并删除边原始数据中的边类型列
+                    # If set, extract and remove edge type column from raw edge data
                     edge_type_column = self.edge_type_column
                     edges = edges.drop(columns=[edge_type_column])
                 # num = 0
@@ -281,11 +281,11 @@ class BioDataset(InMemoryDataset):
 
                 if self.edge_feature_column:
                     feature_cols = [col.strip() for col in self.edge_feature_column.split(',')]
-                    # 检查特征列是否存在
+                    # Check if feature columns exist
                     for col in feature_cols:
                         if col not in valid_edges.columns:
                             logging.warning(f"Edge feature column '{col}' not found in edges file")
-                    # 仅保留存在的特征列
+                    # Keep only existing feature columns
                     valid_feature_cols = [col for col in feature_cols if col in valid_edges.columns]
                     if valid_feature_cols:
                         valid_edges = valid_edges[[src_col, dst_col] + valid_feature_cols]
@@ -322,10 +322,10 @@ class BioDataset(InMemoryDataset):
                             print(f"Error processing batch: {e}")
                             continue
 
-                # 将id按顺序排序
+                # Sort ids in order
                 type_to_features = {}
                 for type_name, group in grouped:
-                    # Group is already sorted by *id
+                    # Group is already sorted by _id
                     group = group.sort_values(by='_id')
                     features = group.drop(columns=['_id', '_type', '_cluster']).iloc[:, 1:].values  # Skip first column (name)
                     if len(features) > 0:
@@ -348,18 +348,18 @@ class BioDataset(InMemoryDataset):
                 # edge_dict = self.merge_edges(edge_dict)
                 # edge_global_dict = self.merge_edges(edge_global_dict)
 
-                # 遍历生成好的边字典填充HetroData对象
+                # Iterate through generated edge dictionary to populate HeteroData object
                 for key in edge_dict:
-                    # 获取边索引并转置为需要的形状
+                    # Get edge indices and transpose to required shape
                     edge_index = np.array(edge_dict[key]["index"]).T
-                    # 设置遍索引
+                    # Set edge indices
                     data[key].edge_index = torch.tensor(edge_index, dtype=torch.long)
-                    # 判断是否存在边特征
+                    # Check if edge features exist
                     if len(edge_dict[key]["attr"]) > 0:
-                        # 存在则设置边特征
+                        # If exist, set edge features
                         data[key].edge_attr = torch.tensor(np.array(edge_dict[key]["attr"],dtype=float), dtype=torch.float)
 
-                # 添加全局边
+                # Add global edges
                 for key, edges in edge_global_dict.items():
                     edge_index = np.array(edges["index"]).T
                     data[key].global_edge_index = torch.tensor(edge_index, dtype=torch.long)
@@ -367,51 +367,51 @@ class BioDataset(InMemoryDataset):
                                                              dtype=torch.float)
 
             else:
-                # 不使用节点名称
+                # Do not use node names
                 # Todo
-                # 待实现
+                # To be implemented
                 pass
 
-            # 获取图的标签（如果使用标签）
+            # Get graph labels (if using labels)
             if self.use_graph_labels:
                 data["global"].y = torch.tensor([labels_df.loc[labels_df['graph_id'] == i, 'label'].values[0]], dtype=torch.long)
 
             data_list.append(data)
 
-        # 确保处理目录存在
+        # Ensure processed directory exists
         os.makedirs(self.processed_dir, exist_ok=True)
 
         if self.merge_graphs:
             if len(data_list) > 0:
-                # 合并所有 Data 对象并保存为一个文件
+                # Merge all Data objects and save as one file
                 if len(data_list) == 1:
-                    # 只有一张子图的情况，不使用 collate()
+                    # Single subgraph case, do not use collate()
                     torch.save(data_list[0], os.path.join(self.processed_dir, self.processed_file_names[0]))
-                    logging.info(f"单张子图已保存至 {self.processed_file_names[0]}")
+                    logging.info(f"Single subgraph saved to {self.processed_file_names[0]}")
                 else:
                     data, slices = self.collate(data_list)
                     torch.save((data, slices), os.path.join(self.processed_dir, self.processed_file_names[0]))
-                    logging.info(f"所有图数据已合并并保存至 {self.processed_file_names[0]}")
+                    logging.info(f"All graph data merged and saved to {self.processed_file_names[0]}")
             else:
                 raise Exception("The dataset is empty.")
         else:
-            # 分别保存每个 Data 对象
+            # Save each Data object separately
             for i, data in enumerate(data_list):
                 torch.save((data, None), self.processed_file_names[i])
-                logging.info(f"图数据 {i} 已保存至 {self.processed_file_names[i]}")
+                logging.info(f"Graph data {i} saved to {self.processed_file_names[i]}")
 
     def __getitem__(self, idx):
         """
-        根据配置加载处理后文件
+        Load processed files according to configuration
         :param idx:
         :return:
         """
         if self.merge_graphs:
             if self.slices is None:
-                # 只有一张子图，直接返回
+                # Single subgraph, return directly
                 return self._data
             else:
-                # 多张子图，使用切片信息提取
+                # Multiple subgraphs, extract using slice information
                 return self.get(idx)
         else:
             data, _ = torch.load(self.processed_file_names[idx])
@@ -419,25 +419,25 @@ class BioDataset(InMemoryDataset):
 
     def __len__(self):
         """
-        返回数据集的大小。
+        Return the size of the dataset.
         :return:
         """
         if self.merge_graphs:
-            # 从合并后的文件中加载数据和切片信息
+            # Load data and slice information from merged file
             if self.slices is None:
-                return 1  # 单张子图的情况
+                return 1  # Single subgraph case
             else:
-                # 返回合并后图的数量，通过 slices['x'] 的长度 - 1 确定
+                # Return number of merged graphs, determined by len(slices['x']) - 1
                 return len(self.slices['x']) - 1
         else:
-            # 如果没有合并，直接返回图的数量
+            # If not merged, return number of graphs directly
             return self.num_graphs
 
     def get(self, idx):
-        """根据索引从合并的数据中提取子图。"""
+        """Extract subgraph from merged data by index."""
         data = HeteroData()
 
-        # 遍历每个属性，并根据切片信息提取数据
+        # Iterate through each attribute and extract data according to slice information
         for key in self._data.keys():
             item = self._data[key]
             if torch.is_tensor(item):
@@ -767,7 +767,7 @@ def create_data_loader(
         neg_sample_path: str=None
 ) -> DataLoader:
     """
-    打包所有数据生成data_loader
+    Package all data to generate data_loader
     """
 
     gpu_x_dict = {node_type: tensor.to(device) for node_type, tensor in data.x_dict.items()}
@@ -783,23 +783,23 @@ def create_data_loader(
     gpu_test_edge_dict = {}
 
     for edge_type in data.edge_types:
-        # 加入先验边
+        # Add prior edges
         if hasattr(data[edge_type], 'edge_index'):
             gpu_prior_edge_dict[edge_type] = data[edge_type].edge_index.to(device)
             if hasattr(data[edge_type], 'edge_attr'):
                 gpu_prior_edge_attr_dict[edge_type] = data[edge_type].edge_attr.to(device)
 
-        # 处理全局边（共表达关系）
+        # Process global edges (co-expression relationships)
         if hasattr(data[edge_type], 'global_edge_index'):
             gpu_global_edge_dict[edge_type] = data[edge_type].global_edge_index.to(device)
             if hasattr(data[edge_type], 'global_edge_attr'):
                 gpu_global_edge_attr_dict[edge_type] = data[edge_type].global_edge_attr.to(device)
 
-        # 处理训练边
+        # Process training edges
         if hasattr(data[edge_type], 'train_edge_index'):
             gpu_train_edge_dict[edge_type] = data[edge_type].train_edge_index.to(device)
 
-        # 处理测试边
+        # Process test edges
         if hasattr(data[edge_type], 'test_edge_index'):
             gpu_test_edge_dict[edge_type] = data[edge_type].test_edge_index.to(device)
 
@@ -825,7 +825,7 @@ def create_data_loader(
 
     batch_size = config["training"]["batch_size"]
 
-    #读取负样本
+    # Read negative samples
     neg_samples = joblib.load(neg_sample_path)
 
     dataset = NegativeSamplesDataset(data, neg_samples)
@@ -1038,7 +1038,7 @@ class NetworkBuider:
             if src not in self.node_types or dst not in self.node_types:
                 continue
 
-            # 对CRE分染色体处理
+            # Process CRE by chromosome
             if src=='CRE' and dst=='CRE':
                 cre_data = self.node_groups['CRE'].copy()
                 cre_data['chromosome'] = cre_data['gene_id'].apply(lambda x: x.split('-')[0])
@@ -1065,10 +1065,10 @@ class NetworkBuider:
                             method=self.topK_type
                         )
 
-                        # 获取当前染色体的节点索引
+                        # Get node indices of current chromosome
                         chrom_indices = chrom_data.index.values
 
-                        # 转换边的索引为实际的基因ID
+                        # Convert edge indices to actual gene IDs
                         network_df = pd.DataFrame({
                             'from': chrom_data['gene_id'].values[edges[0].numpy()],
                             'to': chrom_data['gene_id'].values[edges[1].numpy()],
@@ -1077,7 +1077,7 @@ class NetworkBuider:
 
                         all_edges.append(network_df)
 
-                # 合并所有染色体的边
+                # Merge edges from all chromosomes
                 if all_edges:
                     self.networks[f"{src}_{dst}"] = pd.concat(all_edges, ignore_index=True)
             else:
@@ -1247,7 +1247,8 @@ class EvaluationBuider:
     def analysis(self,
                  edge_types: List[str]=None) -> Dict:
         """
-        该方法对指定的边类型分别计算 AUC 和 AUPR，评估嵌入区分正负边的能力
+        This method calculates AUC and AUPR for specified edge types respectively, evaluating the ability of embeddings
+        to distinguish between positive and negative edges
         """
         result = {}
 
@@ -1389,21 +1390,21 @@ class EvaluationBuider:
             dst_gene_to_index = {gene_id: idx for idx, gene_id in enumerate(dst_geneids)}
             dst_index_to_gene = {idx: gene_id for gene_id, idx in dst_gene_to_index.items()}
 
-            # 将正边的基因ID转换为本地索引
+            # Convert gene IDs of positive edges to local indices
             local_pos_edges = torch.zeros((2, len(pos_edges[0])), dtype=torch.long)
             for i, (src_id, dst_id) in enumerate(zip(pos_edges[0], pos_edges[1])):
                 if src_id in src_gene_to_index and dst_id in dst_gene_to_index:
                     local_pos_edges[0, i] = src_gene_to_index[src_id]
                     local_pos_edges[1, i] = dst_gene_to_index[dst_id]
 
-            # 使用negative_sampling生成负样本
+            # Generate negative samples using negative_sampling
             local_neg_edges = negative_sampling(
                 edge_index=local_pos_edges,
                 num_nodes=(len(src_geneids), len(dst_geneids)),
                 num_neg_samples=num_neg_edges
             )
 
-            # 将本地索引转换回基因ID
+            # Convert local indices back to gene IDs
             neg_src = [src_index_to_gene[idx.item()] for idx in local_neg_edges[0]]
             neg_dst = [dst_index_to_gene[idx.item()] for idx in local_neg_edges[1]]
 
@@ -1437,78 +1438,3 @@ class EvaluationBuider:
             scores = torch.sigmoid(scores)
 
         return scores
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
