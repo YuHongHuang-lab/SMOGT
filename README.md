@@ -69,7 +69,7 @@ Train gene-specific neural networks for each target gene based on HRNet.
 ## Usage
 1. Modify corresponding paths and parameters according to your data
 2. Run scripts directly
-3. Example data is available on Zenodo for testing
+3. Example data is available on Zenodo for testing：https://zenodo.org/records/19111535
 
 ---
 
