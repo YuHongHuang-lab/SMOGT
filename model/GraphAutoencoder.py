@@ -3,11 +3,11 @@ import torch.nn.functional as F
 from torch_geometric.nn import HeteroConv, SAGEConv, GCNConv
 from model.GraphAttention import GraphAttentionLayer
 
-#GAT+regression
+# GAT+regression
 class SimplifiedGraphAtten_regression(torch.nn.Module):
     """
     Graph attention network for regression on heterogeneous graphs.
-    Predicts expression values for Target genes and selected TFs.
+    Predicts expression values for Target genes and selected TFs (Transcription Factors).
     """
 
     def __init__(self, metadata,
@@ -18,7 +18,7 @@ class SimplifiedGraphAtten_regression(torch.nn.Module):
                  dropout=0.2,
                  raw_dim=None,
                  layer_nums=2,
-                 top_k_type='globel',
+                 top_k_type='global',  # Fixed typo: 'globel' -> 'global'
                  top_k=10):
         super(SimplifiedGraphAtten_regression, self).__init__()
 
@@ -46,14 +46,14 @@ class SimplifiedGraphAtten_regression(torch.nn.Module):
             for node_type in ['TF', 'CRE']:
                 self_loop_type = (node_type, 'self_loop', node_type)
 
-                if layer_nums==1:
+                if layer_nums == 1:
                     in_channels = (raw_dim, raw_dim)
                     out_channels = hidden_dim
                 else:
                     if i == 0:
                         in_channels = (raw_dim, raw_dim)
                         out_channels = hidden_dim * 2
-                    elif i==1:
+                    elif i == 1:
                         in_channels = (hidden_dim * 2, hidden_dim * 2)
                         out_channels = hidden_dim
                     else:
@@ -73,22 +73,21 @@ class SimplifiedGraphAtten_regression(torch.nn.Module):
 
                 src_type, _, dst_type = edge_type
 
-                if layer_nums==1:
+                if layer_nums == 1:
                     in_channels = (raw_dim, raw_dim)
                     out_channels = hidden_dim
                 else:
                     if i == 0:
                         in_channels = (raw_dim, raw_dim)
                         out_channels = hidden_dim * 2
-                    elif i==1:
+                    elif i == 1:
                         in_channels = (hidden_dim * 2, hidden_dim * 2)
                         out_channels = hidden_dim
                     else:
                         in_channels = (hidden_dim, hidden_dim)
                         out_channels = hidden_dim
 
-
-                if src_type=='TF' and dst_type=='TF':
+                if src_type == 'TF' and dst_type == 'TF':
                     if isinstance(in_channels, tuple):
                         in_channels = in_channels[0]
 
@@ -130,11 +129,11 @@ class SimplifiedGraphAtten_regression(torch.nn.Module):
 
         for node_type in ['TF', 'CRE']:
             x = current_x_dict[node_type]
-            # 如果该节点类型的自环边类型还未在 edge_index_dict 中，则添加
+            # If the self-loop edge type for this node type is not in edge_index_dict, add it
             self_loop_edge_type = (node_type, 'self_loop', node_type)
 
             if self_loop_edge_type not in data.prior_edge_index_dict:
-                # 创建自环边索引，使每个节点都连到自身
+                # Create self-loop edge indices where each node is connected to itself
                 self_loop_index = torch.arange(x.size(0)).unsqueeze(0).repeat(2, 1).to(device)
                 data.prior_edge_index_dict[self_loop_edge_type] = self_loop_index
 
@@ -144,8 +143,8 @@ class SimplifiedGraphAtten_regression(torch.nn.Module):
 
             for edge_type, conv_op in gat_conv.convs.items():
                 src_type, type, dst_type = edge_type
-                if type!='self_loop':
-                    if src_type=='TF' and dst_type=='TF':
+                if type != 'self_loop':
+                    if src_type == 'TF' and dst_type == 'TF':
                         edge_out = conv_op(
                             current_x_dict[src_type],
                             data.prior_edge_index_dict[edge_type]
@@ -174,7 +173,7 @@ class SimplifiedGraphAtten_regression(torch.nn.Module):
                 for node_type, outs in conv_dict.items()
             }
 
-            if i==1:
+            if i == 1:
                 current_x_dict = {
                     k: F.dropout(v, self.dropout, training=self.training) for k, v in current_x_dict.items()
                 }
@@ -196,16 +195,14 @@ class SimplifiedGraphAtten_regression(torch.nn.Module):
 
 class EdgePredictionDecoder(torch.nn.Module):
     """
-    边预测解码器
-    基于节点的嵌入向量 z 和填充的 edge_index 来预测边的存在性
+    Edge prediction decoder.
+    Predicts the existence of edges based on node embedding vectors z and edge_index.
     """
     def forward(self, z_dict, edge_index_dict):
         edge_logits_dict = {}
         for edge_type, edge_index in edge_index_dict.items():
-            if edge_index.size(1)>0:
+            if edge_index.size(1) > 0:
                 src_type, _, dst_type = edge_type
                 edge_logits = (z_dict[src_type][edge_index[0]] * z_dict[dst_type][edge_index[1]]).sum(dim=-1)
                 edge_logits_dict[str(edge_type)] = torch.sigmoid(edge_logits)
         return edge_logits_dict
-
-
