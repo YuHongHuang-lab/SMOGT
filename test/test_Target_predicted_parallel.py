@@ -1,5 +1,5 @@
 import os
-# 必须在导入 numpy/torch/pandas 之前设置，spawn 子进程导入模块时才会生效
+# Must be set before importing numpy/torch/pandas to take effect when spawn subprocesses import modules
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
@@ -16,11 +16,11 @@ from functools import partial
 
 from model.BioStreamNet import *
 
-# 进程级缓存（仅在进程池模式下使用）
+# Process-level cache (only used in process pool mode)
 _PROC_STATE = {}
 
 def _worker_init():
-    # 子进程初始化：限制每个进程内的底层线程数，避免与多进程叠加导致崩溃
+    # Subprocess initialization: Limit the number of underlying threads in each process to avoid crashes caused by overlapping with multiprocessing
     import os
     os.environ['OMP_NUM_THREADS'] = '1'
     os.environ['MKL_NUM_THREADS'] = '1'
@@ -39,9 +39,9 @@ def _worker_init_with_data(all_nodes_path,
                            edges_path,
                            models_and_networks_dir):
     _worker_init()
-    # 在每个进程内加载大矩阵和网络到本地缓存，避免通过 pickle 复制
+    # Load large matrices and networks into local cache within each process to avoid copying via pickle
     global _PROC_STATE
-    # 读取训练与全体节点矩阵
+    # Read training and full node matrices
     common_seacells_mat_train = pd.read_csv(
         train_nodes_path,
         index_col=0)
@@ -102,7 +102,7 @@ def _worker_init_with_data(all_nodes_path,
     }
 
 def _train_single_gene_proc(gene_name):
-    # 使用进程内缓存进行训练
+    # Train using in-process cache
     try:
         global _PROC_STATE
         global_network = _PROC_STATE['global_network']
@@ -120,7 +120,7 @@ def _train_single_gene_proc(gene_name):
             combined_df = pd.concat(sub_network_dfs.values(), ignore_index=True)
             combined_df.to_csv(network_df_path, index=False)
         else:
-            print(f"无法为 {gene_name} 生成网络。跳过训练。")
+            print(f"Cannot generate network for {gene_name}. Skipping training.")
             return {'gene': gene_name, 'correlation': 0.0, 'p_value': np.nan}
 
         if torch.cuda.is_available():
@@ -152,7 +152,7 @@ def _train_single_gene_proc(gene_name):
             'p_value': p_value
         }
     except Exception as e:
-        print(f"训练基因 {gene_name} 时发生错误: {str(e)}")
+        print(f"Error training gene {gene_name}: {str(e)}")
         return {
             'gene': gene_name,
             'correlation': 0.0,
@@ -161,13 +161,13 @@ def _train_single_gene_proc(gene_name):
 
 def train_single_gene(args):
     """
-    训练单个基因的模型（用于并行处理）
+    Train model for a single gene (for parallel processing)
     """
     (gene_name, global_network, models_and_networks_dir,
      common_seacells_mat_TF, common_seacells_mat_CRE, common_seacells_mat_Target, train_df) = args
 
     try:
-        # 先保存网络文件
+        # Save network file first
         gene_type = 'Target' if gene_name in global_network.Target_names else 'TF'
         _, sub_network_dfs = global_network.get_gene_specific_network(gene_name, gene_type=gene_type)
 
@@ -176,13 +176,13 @@ def train_single_gene(args):
             combined_df = pd.concat(sub_network_dfs.values(), ignore_index=True)
             combined_df.to_csv(network_df_path, index=False)
         else:
-            print(f"无法为 {gene_name} 生成网络。跳过训练。")
+            print(f"Cannot generate network for {gene_name}. Skipping training.")
             return {'gene': gene_name, 'correlation': 0.0, 'p_value': np.nan}
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        # 为每个任务创建独立的预测器以避免线程间共享状态
+        # Create an independent predictor for each task to avoid shared state between threads
         local_predictor = GeneExpressionPredictor(global_network)
         local_predictor.prepare_data(tf_expr=common_seacells_mat_TF,
                                      cre_expr=common_seacells_mat_CRE,
@@ -210,7 +210,7 @@ def train_single_gene(args):
         }
 
     except Exception as e:
-        print(f"训练基因 {gene_name} 时发生错误: {str(e)}")
+        print(f"Error training gene {gene_name}: {str(e)}")
         return {
             'gene': gene_name,
             'correlation': 0.0,
@@ -223,7 +223,7 @@ def train_genes_parallel(gene_names, global_network, models_and_networks_dir,
                          common_seacells_mat_Target, train_df, n_cores=4, use_threads=True,
                          data_paths=None):
     """
-    并行训练多个基因的模型
+    Train models for multiple genes in parallel
     """
     args_list = []
     for gene_name in gene_names:
@@ -247,14 +247,14 @@ def train_genes_parallel(gene_names, global_network, models_and_networks_dir,
                     results.append(result)
                 except Exception as e:
                     gene_name = future_to_gene[future]
-                    print(f"处理基因 {gene_name} 时发生错误: {e}")
+                    print(f"Error processing gene {gene_name}: {e}")
                     results.append({
                         'gene': gene_name,
                         'correlation': 0.0,
                         'p_value': np.nan
                     })
     else:
-        # 进程池模式：在进程内加载数据，避免大对象跨进程拷贝
+        # Process pool mode: Load data within processes to avoid copying large objects across processes
         if not data_paths:
             raise ValueError('Process mode requires data_paths with keys: all_nodes_path, train_nodes_path, node_names_path, edges_path')
         ctx = multiprocessing.get_context('spawn')
@@ -281,7 +281,7 @@ def train_genes_parallel(gene_names, global_network, models_and_networks_dir,
                     results.append(result)
                 except Exception as e:
                     gene_name = future_to_gene[future]
-                    print(f"处理基因 {gene_name} 时发生错误: {e}")
+                    print(f"Error processing gene {gene_name}: {e}")
                     results.append({
                         'gene': gene_name,
                         'correlation': 0.0,
@@ -289,5 +289,3 @@ def train_genes_parallel(gene_names, global_network, models_and_networks_dir,
                     })
 
     return results
-
-
