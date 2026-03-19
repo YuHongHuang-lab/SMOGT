@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="87a71b35-bb76-4545-b325-771712708208" name="tycloud_tmp">
+        <fileTransfer accessType="SFTP" host="74hbumsmbb6lnznt.tmp001.dftianyi.com" port="10372" sshConfigId="c58cad29-f2d0-4230-a972-7406d497c210" sshConfig="tycloud@74hbumsmbb6lnznt.tmp001.dftianyi.com:10372 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

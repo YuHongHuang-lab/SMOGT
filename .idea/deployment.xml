@@ -1,1 +1,154 @@
-
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="lijinyang@xiyoucloud.pro:11840 password">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="lijinyang@xiyoucloud.pro:11840 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@74hbumsmbb6lnznt.tmp001.dftianyi.com:10372 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/data/home/tycloud/workspace/bio-network" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@93qvun1few7oz2t3.ty008.dftianyi.com:19249 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/data/home/tycloud/workspace/bio-network" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@bcsftg2mrlwonbh6.ty008.dftianyi.com:10965 password">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@bcsftg2mrlwonbh6.ty008.dftianyi.com:10965 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@bcsftg2mrlwonbh6.ty008.dftianyi.com:10965 password (2)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@bcsftg2mrlwonbh6.ty008.dftianyi.com:10965 password (3)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@bcsftg2mrlwonbh6.ty008.dftianyi.com:14004 password">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@d4nwcmqfvhuap6uz.ty008.dftianyi.com:11806 password">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@d4nwcmqfvhuap6uz.ty008.dftianyi.com:11806 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@k5z8g5y8039ialp9.ty008.dftianyi.com:10571 password">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@k5z8g5y8039ialp9.ty008.dftianyi.com:13994 password">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@k5z8g5y8039ialp9.ty008.dftianyi.com:13994 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@k5z8g5y8039ialp9.ty008.dftianyi.com:13994 password (2)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@k6qsbjp95r3ajxj2.ty008.dftianyi.com:10879 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/data/home/tycloud/workspace/algorithms_raw" local="$PROJECT_DIR$/../paper_3/seacells" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@k6qsbjp95r3ajxj2.ty008.dftianyi.com:10879 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@k6qsbjp95r3ajxj2.ty008.dftianyi.com:10879 password (2)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@k6qsbjp95r3ajxj2.ty008.dftianyi.com:10879 password (3)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud@k6qsbjp95r3ajxj2.ty008.dftianyi.com:10879 password (4)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tycloud_tmp">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/data/home/tycloud/workspace/bio-network" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
