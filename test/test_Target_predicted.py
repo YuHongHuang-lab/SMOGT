@@ -23,7 +23,7 @@ from functools import partial
 # common_seacells_mat = pd.read_csv('/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/HSPC/raw_600/graph_0_nodes.csv',
 #                                   index_col=0)
 #
-# #生成训练文件
+# # Generate training file
 # train_df = pd.DataFrame({'id' : common_seacells_mat.columns,
 #                         'train' : [id in train_id for id in common_seacells_mat.columns]})
 # train_df['train'] = train_df['train'].astype(int)
@@ -36,12 +36,12 @@ from functools import partial
 #
 # GRN_df = pd.read_csv('/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/HSPC_predict/raw_600/graph_0_edges.csv')
 #
-# #表达矩阵准备
+# # Prepare expression matrix
 # common_seacells_mat_TF = common_seacells_mat.loc[TF, ]
 # common_seacells_mat_Target = common_seacells_mat.loc[Target, ]
 # common_seacells_mat_CRE = common_seacells_mat.loc[CRE, ]
 #
-# #网络准备
+# # Prepare network
 # TF_TF_network = GRN_df.loc[GRN_df['edge_id_type']=='TF_TF', ['from', 'to']]
 # TF_TF_network['score'] = 1
 #
@@ -80,9 +80,9 @@ from functools import partial
 # gene_names = gene_names['gene'].tolist()
 #
 # results = []
-# # 为每个基因训练模型
+# # Train model for each gene
 # for i, gene_name in enumerate(tqdm(gene_names, desc="Training genes")):
-#     print(f"\n[{i + 1}/{len(gene_names)}] 正在训练基因: {gene_name}")
+#     print(f"\n[{i + 1}/{len(gene_names)}] Training gene: {gene_name}")
 #
 #     try:
 #         if torch.cuda.is_available():
@@ -99,23 +99,23 @@ from functools import partial
 #         correlation = evaluation['correlation']
 #         p_value = evaluation.get('p_value', np.nan)
 #
-#         # 释放模型内存
+#         # Release model memory
 #         del model, evaluation
 #         gc.collect()
 #
 #     except Exception as e:
-#         print(f"训练基因 {gene_name} 时发生错误: {str(e)}")
+#         print(f"Error training gene {gene_name}: {str(e)}")
 #         correlation = 0.0
 #         p_value = np.nan
 #
-#     # 保存结果
+#     # Save results
 #     results.append({
 #         'gene': gene_name,
 #         'correlation': correlation,
 #         'p_value': p_value
 #     })
 #
-# # 创建最终结果DataFrame
+# # Create final results DataFrame
 # results_df = pd.DataFrame(results)
 # results_df = results_df.dropna(subset=['correlation'])
 # np.mean(results_df['correlation'])
@@ -133,7 +133,7 @@ from functools import partial
 # common_seacells_mat = pd.read_csv('/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/PBMC/raw_600/graph_0_nodes.csv',
 #                                   index_col=0)
 #
-# #生成训练文件
+# # Generate training file
 # train_df = pd.DataFrame({'id' : common_seacells_mat.columns,
 #                         'train' : [id in train_id for id in common_seacells_mat.columns]})
 # train_df['train'] = train_df['train'].astype(int)
@@ -146,12 +146,12 @@ from functools import partial
 #
 # GRN_df = pd.read_csv('/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/PBMC_predict/raw_600/graph_0_edges.csv')
 #
-# #表达矩阵准备
+# # Prepare expression matrix
 # common_seacells_mat_TF = common_seacells_mat.loc[TF, ]
 # common_seacells_mat_Target = common_seacells_mat.loc[Target, ]
 # common_seacells_mat_CRE = common_seacells_mat.loc[CRE, ]
 #
-# #网络准备
+# # Prepare network
 # TF_TF_network = GRN_df.loc[GRN_df['edge_id_type']=='TF_TF', ['from', 'to']]
 # TF_TF_network['score'] = 1
 #
@@ -190,10 +190,10 @@ from functools import partial
 #                          header=None, names=['gene'])
 # gene_names = gene_names['gene'].tolist()
 #
-# # 为每个基因训练模型
+# # Train model for each gene
 # results = []
 # for i, gene_name in enumerate(tqdm(gene_names, desc="Training genes")):
-#     print(f"\n[{i + 1}/{len(gene_names)}] 正在训练基因: {gene_name}")
+#     print(f"\n[{i + 1}/{len(gene_names)}] Training gene: {gene_name}")
 #     try:
 #         if torch.cuda.is_available():
 #             torch.cuda.empty_cache()
@@ -209,23 +209,23 @@ from functools import partial
 #         correlation = evaluation['correlation']
 #         p_value = evaluation.get('p_value', np.nan)
 #
-#         # 释放模型内存
+#         # Release model memory
 #         del model, evaluation
 #         gc.collect()
 #
 #     except Exception as e:
-#         print(f"训练基因 {gene_name} 时发生错误: {str(e)}")
+#         print(f"Error training gene {gene_name}: {str(e)}")
 #         correlation = 0.0
 #         p_value = np.nan
 #
-#     # 保存结果
+#     # Save results
 #     results.append({
 #         'gene': gene_name,
 #         'correlation': correlation,
 #         'p_value': p_value
 #     })
 #
-# # 创建最终结果DataFrame
+# # Create final results DataFrame
 # results_df = pd.DataFrame(results)
 # results_df = results_df.dropna(subset=['correlation'])
 # np.mean(results_df['correlation'])
@@ -233,10 +233,10 @@ from functools import partial
 # results_df.to_csv(os.path.join(output_dir, 'gene_prediction_our.csv'), index=False)
 
 
-# PBMC TF_CRE,CRE_CRE 参数敏感性 并行计算
+# PBMC TF_CRE,CRE_CRE parameter sensitivity parallel computing
 # TF_CRE:0.8, CRE_CRE:0.1
 
-# num_processes = 4  # 使用更少的进程
+# num_processes = 4  # Use fewer processes
 #
 # TF_CRE_network = pd.read_csv('/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/PBMC_predict/processed/hummus_PBMC_TF_CRE_0.8_CRE_CRE_0.1/bipartite/TF_CRE.csv',
 #                      sep='\t', header=None, names=['from', 'to', 'score'])
@@ -250,7 +250,7 @@ from functools import partial
 #
 # # gene_names = gene_names[:24]
 #
-# # 串行
+# # Serial execution
 # global_network = GlobalNetworkManager(
 #     TF_TF_network=TF_TF_network,
 #     CRE_CRE_network=CRE_CRE_network,
@@ -272,10 +272,10 @@ from functools import partial
 # #
 # #
 # #
-# # 为每个基因训练模型
+# # Train model for each gene
 # results = []
 # for i, gene_name in enumerate(tqdm(gene_names, desc="Training genes")):
-#     print(f"\n[{i + 1}/{len(gene_names)}] 正在训练基因: {gene_name}")
+#     print(f"\n[{i + 1}/{len(gene_names)}] Training gene: {gene_name}")
 #     try:
 #         if torch.cuda.is_available():
 #             torch.cuda.empty_cache()
@@ -291,23 +291,23 @@ from functools import partial
 #         correlation = evaluation['correlation']
 #         p_value = evaluation.get('p_value', np.nan)
 #
-#         # 释放模型内存
+#         # Release model memory
 #         del model, evaluation
 #         gc.collect()
 #
 #     except Exception as e:
-#         print(f"训练基因 {gene_name} 时发生错误: {str(e)}")
+#         print(f"Error training gene {gene_name}: {str(e)}")
 #         correlation = 0.0
 #         p_value = np.nan
 #
-#     # 保存结果
+#     # Save results
 #     results.append({
 #         'gene': gene_name,
 #         'correlation': correlation,
 #         'p_value': p_value
 #     })
 #
-# # 创建最终结果DataFrame
+# # Create final results DataFrame
 # results_df = pd.DataFrame(results)
 # results_df = results_df.dropna(subset=['correlation'])
 # np.mean(results_df['correlation'])
@@ -327,7 +327,7 @@ from functools import partial
 # common_seacells_mat = pd.read_csv('/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/A549/raw_500/graph_0_nodes.csv',
 #                                   index_col=0)
 #
-# #生成训练文件
+# # Generate training file
 # train_df = pd.DataFrame({'id' : common_seacells_mat.columns,
 #                         'train' : [id in train_id for id in common_seacells_mat.columns]})
 # train_df['train'] = train_df['train'].astype(int)
@@ -340,12 +340,12 @@ from functools import partial
 #
 # GRN_df = pd.read_csv('/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/A549_predict/raw_500/graph_0_edges.csv')
 #
-# #表达矩阵准备
+# # Prepare expression matrix
 # common_seacells_mat_TF = common_seacells_mat.loc[TF, ]
 # common_seacells_mat_Target = common_seacells_mat.loc[Target, ]
 # common_seacells_mat_CRE = common_seacells_mat.loc[CRE, ]
 #
-# #网络准备
+# # Prepare network
 # TF_TF_network = GRN_df.loc[GRN_df['edge_id_type']=='TF_TF', ['from', 'to']]
 # TF_TF_network['score'] = 1
 #
@@ -383,10 +383,10 @@ from functools import partial
 #                          header=None, names=['gene'])
 # gene_names = gene_names['gene'].tolist()
 #
-# # 为每个基因训练模型
+# # Train model for each gene
 # results = []
 # for i, gene_name in enumerate(tqdm(gene_names, desc="Training genes")):
-#     print(f"\n[{i + 1}/{len(gene_names)}] 正在训练基因: {gene_name}")
+#     print(f"\n[{i + 1}/{len(gene_names)}] Training gene: {gene_name}")
 #
 #     try:
 #         if torch.cuda.is_available():
@@ -403,23 +403,23 @@ from functools import partial
 #         correlation = evaluation['correlation']
 #         p_value = evaluation.get('p_value', np.nan)
 #
-#         # 释放模型内存
+#         # Release model memory
 #         del model, evaluation
 #         gc.collect()
 #
 #     except Exception as e:
-#         print(f"训练基因 {gene_name} 时发生错误: {str(e)}")
+#         print(f"Error training gene {gene_name}: {str(e)}")
 #         correlation = 0.0
 #         p_value = np.nan
 #
-#     # 保存结果
+#     # Save results
 #     results.append({
 #         'gene': gene_name,
 #         'correlation': correlation,
 #         'p_value': p_value
 #     })
 #
-# # 创建最终结果DataFrame
+# # Create final results DataFrame
 # results_df = pd.DataFrame(results)
 # results_df = results_df.dropna(subset=['correlation'])
 # np.mean(results_df['correlation'])
@@ -430,8 +430,8 @@ from functools import partial
 # endregion other
 
 
-# region HPSC preturb
-# HPSC preturb
+# region HPSC perturb
+# HPSC perturb
 output_dir = '/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/HSPC_preturb'
 models_and_networks_dir = os.path.join(output_dir, "models_and_networks_p")
 os.makedirs(models_and_networks_dir, exist_ok=True)
@@ -450,7 +450,7 @@ del common_seacells_mat_train
 common_seacells_mat = pd.read_csv(all_nodes_path,
                                   index_col=0)
 
-#生成训练文件
+# Generate training file
 train_df = pd.DataFrame({'id' : common_seacells_mat.columns,
                         'train' : [id in train_id for id in common_seacells_mat.columns]})
 train_df['train'] = train_df['train'].astype(int)
@@ -463,12 +463,12 @@ CRE = Genes_Peaks_df.loc[Genes_Peaks_df['type']=='CRE', 'name'].to_list()
 
 GRN_df = pd.read_csv(edges_path)
 
-#表达矩阵准备
+# Prepare expression matrix
 common_seacells_mat_TF = common_seacells_mat.loc[TF, ]
 common_seacells_mat_Target = common_seacells_mat.loc[Target, ]
 common_seacells_mat_CRE = common_seacells_mat.loc[CRE, ]
 
-# #网络准备
+# Prepare network
 TF_TF_network = GRN_df.loc[GRN_df['edge_id_type']=='TF_TF', ['from', 'to']]
 TF_TF_network['score'] = 1
 
@@ -522,7 +522,7 @@ gene_predict_df = simulate_perturbation(perturbations={'NFIA':2},
                                         gene_list=gene_list,
                                         ncores=1)
 
-# 进行多次迭代，模拟网络远距离调控
+# Perform multiple iterations to simulate long-range regulation of the network
 # common_seacells_mat_TF_new = common_seacells_mat_TF.copy()
 # common_seacells_mat_TF_new.update(gene_predict_df)
 #
@@ -575,8 +575,8 @@ learned_network_df.to_csv(os.path.join(output_dir, 'GRN_IRF8.csv'))
 # endregion
 
 
-# region Melanoma preturb
-# Melanoma preturb
+# region Melanoma perturb
+# Melanoma perturb
 output_dir = '/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/Melanoma'
 models_and_networks_dir = os.path.join(output_dir, "models_and_networks_p")
 os.makedirs(models_and_networks_dir, exist_ok=True)
@@ -595,7 +595,7 @@ del common_seacells_mat_train
 common_seacells_mat = pd.read_csv(all_nodes_path,
                                   index_col=0)
 
-#生成训练文件
+# Generate training file
 train_df = pd.DataFrame({'id' : common_seacells_mat.columns,
                         'train' : [id in train_id for id in common_seacells_mat.columns]})
 train_df['train'] = train_df['train'].astype(int)
@@ -608,12 +608,12 @@ CRE = Genes_Peaks_df.loc[Genes_Peaks_df['type']=='CRE', 'name'].to_list()
 
 GRN_df = pd.read_csv(edges_path)
 
-#表达矩阵准备
+# Prepare expression matrix
 common_seacells_mat_TF = common_seacells_mat.loc[TF, ]
 common_seacells_mat_Target = common_seacells_mat.loc[Target, ]
 common_seacells_mat_CRE = common_seacells_mat.loc[CRE, ]
 
-# #网络准备
+# Prepare network
 TF_TF_network = GRN_df.loc[GRN_df['edge_id_type']=='TF_TF', ['from', 'to']]
 TF_TF_network['score'] = 1
 
@@ -668,8 +668,8 @@ gene_predict_df = simulate_perturbation(perturbations={'SOX10':2},
                                         gene_list=gene_list,
                                         ncores=1)
 
-# region 进行多次迭代，模拟网络远距离调控
-# 进行多次迭代，模拟网络远距离调控
+# region Perform multiple iterations to simulate long-range regulation of the network
+# Perform multiple iterations to simulate long-range regulation of the network
 # common_seacells_mat_TF_new = common_seacells_mat_TF.copy()
 # common_seacells_mat_TF_new.update(gene_predict_df)
 #
@@ -703,4 +703,3 @@ run_perturbation_analysis(
     n_cpu=1,
     tf_name='SOX10_2')
 # endregion
-
