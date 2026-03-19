@@ -33,7 +33,7 @@ config_path = "../config.yaml"
 config = load_config(config_path)
 
 
-# The sample version of this module file (with consistent naming) has been uploaded to Zenodo (SMOGT_MRWR_Driver_regulators)
+# The sample version of this module file (with consistent naming) has been uploaded to Zenodo (https://zenodo.org/records/19111535)
 
 # Create EvaluationBuider object to evaluate whether node latent representations reflect true regulatory relationships
 # For detailed parameter settings, refer to the usage of the simulate_perturbation function
