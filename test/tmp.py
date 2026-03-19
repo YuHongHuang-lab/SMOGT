@@ -1,4 +1,4 @@
-# MM
+# MM (Melanoma)
 output_dir = '/mnt/data/home/tycloud/workspace/algorithms_raw_paper_4/data/Melanoma'
 models_and_networks_dir = os.path.join(output_dir, "models_and_networks_p")
 os.makedirs(models_and_networks_dir, exist_ok=True)
@@ -17,7 +17,7 @@ del common_seacells_mat_train
 common_seacells_mat = pd.read_csv(all_nodes_path,
                                   index_col=0)
 
-#生成训练文件
+# Generate training file
 train_df = pd.DataFrame({'id' : common_seacells_mat.columns,
                         'train' : [id in train_id for id in common_seacells_mat.columns]})
 train_df['train'] = train_df['train'].astype(int)
@@ -30,12 +30,12 @@ CRE = Genes_Peaks_df.loc[Genes_Peaks_df['type']=='CRE', 'name'].to_list()
 
 GRN_df = pd.read_csv(edges_path)
 
-#表达矩阵准备
+# Prepare expression matrices
 common_seacells_mat_TF = common_seacells_mat.loc[TF, ]
 common_seacells_mat_Target = common_seacells_mat.loc[Target, ]
 common_seacells_mat_CRE = common_seacells_mat.loc[CRE, ]
 
-# #网络准备
+# Prepare network data
 TF_TF_network = GRN_df.loc[GRN_df['edge_id_type']=='TF_TF', ['from', 'to']]
 TF_TF_network['score'] = 1
 
@@ -89,7 +89,7 @@ gene_predict_df = simulate_perturbation(perturbations={'chr16-85882146-85883060'
                                         gene_list=gene_list,
                                         ncores=1)
 
-# 进行多次迭代，模拟网络远距离调控
+# Perform multiple iterations to simulate long-range regulatory effects of the network
 common_seacells_mat_TF_new = common_seacells_mat_TF.copy()
 common_seacells_mat_TF_new.update(gene_predict_df)
 
@@ -123,7 +123,7 @@ run_perturbation_analysis(
     tf_name='chr16-85882146-85883060_2')
 
 
-# KLF1
+# Analyze KLF1 network weights
 learned_network_df = predictor.analyze_weights(
     gene_name='KLF1',
     model_path=os.path.join(output_dir, 'models_and_networks_p/KLF1_model.pth')
@@ -132,7 +132,7 @@ learned_network_df = predictor.analyze_weights(
 learned_network_df.to_csv(os.path.join(output_dir, 'GRN_KLF1.csv'))
 
 
-# IRF8
+# Analyze IRF8 network weights
 learned_network_df = predictor.analyze_weights(
     gene_name='IRF8',
     model_path=os.path.join(output_dir, 'models_and_networks_p/IRF8_model.pth')
